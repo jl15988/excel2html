@@ -5,6 +5,7 @@ import com.jl15988.excel2html.utils.FileUtil;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -15,8 +16,16 @@ public class Excel2HtmlMain {
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
-        String excelFilePath = "D:\\developerSpace\\GitProjects\\excel2html\\src\\main\\resources\\测试记录表.xlsx";
-        String htmlFilePath = "D:\\developerSpace\\GitProjects\\excel2html\\src\\main\\resources\\test.html";
+
+        // 获取当前类加载器
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        // 获取resources目录的URL地址
+        URL resource = classLoader.getResource("");
+        assert resource != null;
+        String resourcePath = resource.getPath().replace("target/classes/", "") + "src\\main\\resources\\";
+
+        String excelFilePath = resourcePath + "测试记录表.xlsx";
+        String htmlFilePath = resourcePath + "test.html";
 
         try {
             FileInputStream fis = new FileInputStream(excelFilePath);

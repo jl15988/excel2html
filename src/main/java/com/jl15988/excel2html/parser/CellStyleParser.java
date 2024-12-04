@@ -4,13 +4,24 @@ import com.jl15988.excel2html.converter.ColorConverter;
 import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.model.parser.ParserdStyle;
 import com.jl15988.excel2html.model.style.CommonCss;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.DefaultIndexedColorMap;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * 单元格样式解析器
@@ -357,23 +368,20 @@ public class CellStyleParser {
         Map<String, Object> cellBorderStyle = parserCellBorderStyle(cell);
         cellStyleMap.putAll(cellBorderStyle);
         // 背景
-//        XSSFColor fillForegroundColor = cellStyle.getFillForegroundColorColor();
-//        if (Objects.nonNull(fillForegroundColor)) {
-//            String argbHex = fillForegroundColor.getARGBHex();
-//            if (argbHex != null && !argbHex.isEmpty()) {
-//                cellStyleMap.put("background-color", argbHex);
-//            }
-//        }
-//        XSSFColor fillBgColorColor = cellStyle.getFillBackgroundColorColor();
-//        if (Objects.nonNull(fillBgColorColor)) {
-//            String argbHex = fillBgColorColor.getARGBHex();
-//            if (argbHex != null && !argbHex.isEmpty()) {
-//                cellStyleMap.put("background-color", argbHex);
-//            }
-//        }
-////        System.out.println(cellStyle.getFillBackgroundColor());
-//        System.out.println(Arrays.toString(DefaultIndexedColorMap.getDefaultRGB(cellStyle.getFillForegroundColor())));
-//        System.out.println(cellStyle.getFillBack);
+        XSSFColor fillBgColorColor = cellStyle.getFillBackgroundColorColor();
+        if (Objects.nonNull(fillBgColorColor)) {
+            String argbHex = fillBgColorColor.getARGBHex();
+            if (argbHex != null && !argbHex.isEmpty()) {
+                cellStyleMap.put("background-color", ColorConverter.argbHexToRgbaOfTint(argbHex, fillBgColorColor.getTint()));
+            }
+        }
+        XSSFColor fillForegroundColor = cellStyle.getFillForegroundColorColor();
+        if (Objects.nonNull(fillForegroundColor)) {
+            String argbHex = fillForegroundColor.getARGBHex();
+            if (argbHex != null && !argbHex.isEmpty()) {
+                cellStyleMap.put("background-color", ColorConverter.argbHexToRgbaOfTint(argbHex, fillForegroundColor.getTint()));
+            }
+        }
         // 换行
         boolean wrapText = cellStyle.getWrapText();
         if (wrapText) {

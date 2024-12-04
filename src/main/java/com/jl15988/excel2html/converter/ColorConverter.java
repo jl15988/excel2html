@@ -127,4 +127,27 @@ public class ColorConverter {
         int b = Integer.parseInt(hex.substring(6, 8), 16);
         return "rgb(" + r + ", " + g + ", " + b + ", " + hexToAlpha(aHex) + ")";
     }
+
+    /**
+     * argbHex转rgba并通过色调调整颜色
+     *
+     * @param hex hex
+     */
+    public static String argbHexToRgbaOfTint(String hex, double tint) {
+        String aHex = hex.substring(0, 2);
+        int r = Integer.parseInt(hex.substring(2, 4), 16);
+        int g = Integer.parseInt(hex.substring(4, 6), 16);
+        int b = Integer.parseInt(hex.substring(6, 8), 16);
+
+        int[] rgb = formatRgbWithTint(r, g, b, tint);
+
+        return "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
+    }
+
+    public static int[] formatRgbWithTint(int r, int g, int b, double tint) {
+        int red = (int) (r * (1 - tint) + 255 * tint);
+        int green = (int) (g * (1 - tint) + 255 * tint);
+        int blue = (int) (b * (1 - tint) + 255 * tint);
+        return new int[]{red, green, blue};
+    }
 }

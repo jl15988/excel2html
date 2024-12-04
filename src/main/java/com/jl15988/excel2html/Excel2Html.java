@@ -145,11 +145,15 @@ public class Excel2Html {
                 }
 
                 // 添加样式
+                Map<String, Object> cellStyleMap = parserdStyle.getCellStyle();
+                if (cellStyleMap.containsKey("background-color")) {
+                    td.addClass("has-bg-color");
+                }
                 if (compressStyle) {
                     // 添加到tag-style map中，用于后面分组转换
-                    tagCellStyleCompressCache.put(td.getUID(), parserdStyle.getCellStyle());
+                    tagCellStyleCompressCache.put(td.getUID(), cellStyleMap);
                 } else {
-                    td.setStyleMap(parserdStyle.getCellStyle());
+                    td.setStyleMap(cellStyleMap);
                 }
 
                 HtmlElement cellContainerSpan = new HtmlElement("span")
@@ -245,6 +249,10 @@ public class Excel2Html {
                         "\n" +
                         "        .exc-table-cell.has-data .exc-table-cell-table {\n" +
                         "            background-color: white;\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        .exc-table-cell.has-bg-color .exc-table-cell-table {\n" +
+                        "            background-color: rgba(0, 0, 0, 0);\n" +
                         "        }\n" +
                         "\n" +
                         "        .exc-table-cell + .has-data {\n" +
