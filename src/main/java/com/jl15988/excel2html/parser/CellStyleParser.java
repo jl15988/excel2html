@@ -365,9 +365,9 @@ public class CellStyleParser {
         parserdStyleResult.cellStyle.putAll(cellBorderStyle);
         // 背景
         XSSFColor fillBgColorColor = cellStyle.getFillBackgroundColorColor();
-        parserdStyleResult.cellStyle.putIfAbsent("background-color", ColorConverter.xSSFColorToRGBAString(fillBgColorColor));
+        parserdStyleResult.putIfExists(ParserdStyleResult::getCellStyle, "background-color", ColorConverter.xSSFColorToRGBAString(fillBgColorColor));
         XSSFColor fillForegroundColor = cellStyle.getFillForegroundColorColor();
-        parserdStyleResult.cellStyle.putIfAbsent("background-color", ColorConverter.xSSFColorToRGBAString(fillForegroundColor));
+        parserdStyleResult.putIfExists(ParserdStyleResult::getCellStyle, "background-color", ColorConverter.xSSFColorToRGBAString(fillForegroundColor));
         // 换行
         boolean wrapText = cellStyle.getWrapText();
         if (wrapText) {
@@ -383,7 +383,7 @@ public class CellStyleParser {
         // 颜色
         XSSFColor xssfColor = fontAt.getXSSFColor();
         String fontRgba = ColorConverter.xSSFColorToRGBAString(xssfColor);
-        parserdStyleResult.cellContainerStyle.putIfAbsent("color", fontRgba);
+        parserdStyleResult.putIfExists(ParserdStyleResult::getCellContainerStyle, "color", fontRgba);
         // 加粗
         if (fontAt.getBold()) {
             parserdStyleResult.cellContainerStyle.put("font-weight", "bold");

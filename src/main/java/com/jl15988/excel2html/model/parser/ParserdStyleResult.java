@@ -3,10 +3,8 @@ package com.jl15988.excel2html.model.parser;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  * @author Jalon
@@ -32,6 +30,22 @@ public class ParserdStyleResult {
         this.cellValStyleClassList = new ArrayList<>();
 
         this.cellClassList = new ArrayList<>();
+    }
+
+    public ParserdStyleResult putIfExists(Function<ParserdStyleResult, Map<String, Object>> mapper, String name, Object value) {
+        Map<String, Object> map = mapper.apply(this);
+        if (Objects.nonNull(map) && Objects.nonNull(value)) {
+            map.put(name, value);
+        }
+        return this;
+    }
+
+    public ParserdStyleResult addIfExists(Function<ParserdStyleResult, List<String>> mapper, String value) {
+        List<String> list = mapper.apply(this);
+        if (Objects.nonNull(list) && Objects.nonNull(value)) {
+            list.add(value);
+        }
+        return this;
     }
 
     public ParserdStyleResult addCellStyle(Map<String, Object> cellStyle) {
