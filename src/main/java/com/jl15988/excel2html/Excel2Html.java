@@ -4,11 +4,12 @@ import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.converter.style.StyleConverter;
 import com.jl15988.excel2html.converter.style.StyleGroupHtml;
 import com.jl15988.excel2html.enums.ParserdCellValueType;
+import com.jl15988.excel2html.formatter.DefaultCellValueFormatter;
+import com.jl15988.excel2html.formatter.ICellValueFormater;
 import com.jl15988.excel2html.html.HtmlElement;
 import com.jl15988.excel2html.html.HtmlMeta;
 import com.jl15988.excel2html.html.HtmlPage;
 import com.jl15988.excel2html.html.IHtmlElement;
-import com.jl15988.excel2html.interfaces.CellValueFormater;
 import com.jl15988.excel2html.model.parser.ParserdCellValue;
 import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
@@ -75,11 +76,12 @@ public class Excel2Html {
     /**
      * 单元格格式化
      */
-    private CellValueFormater cellValueFormater;
+    private ICellValueFormater cellValueFormater;
 
     public Excel2Html(byte[] fileData) throws IOException {
         this.fileData = fileData;
         this.sheetToHtmlMap = new HashMap<>();
+        this.cellValueFormater = new DefaultCellValueFormatter();
         this.workbook = new XSSFWorkbook(new ByteArrayInputStream(fileData));
     }
 
@@ -93,6 +95,7 @@ public class Excel2Html {
 
     public Excel2Html() {
         this.sheetToHtmlMap = new HashMap<>();
+        this.cellValueFormater = new DefaultCellValueFormatter();
     }
 
     public Excel2Html setCompressStyle(boolean compressStyle) {
@@ -110,7 +113,7 @@ public class Excel2Html {
         return this;
     }
 
-    public Excel2Html setCellValueFormater(CellValueFormater cellValueFormater) {
+    public Excel2Html setCellValueFormater(ICellValueFormater cellValueFormater) {
         this.cellValueFormater = cellValueFormater;
         return this;
     }
@@ -273,6 +276,7 @@ public class Excel2Html {
 
                 // 解析单元格样式
                 ParserdStyleResult parserdStyleResult = CellStyleParser.parserCellStyle(cell);
+                td.addClasses(parserdStyleResult.getCellClassList());
 
                 // 解析合并单元格
                 parserMergedCell(mergedRegions, cell, td, parserdStyleResult);
@@ -313,7 +317,7 @@ public class Excel2Html {
                             .setContent(cellValue);
                     if (this.isCompressStyle) {
                         // 添加到tag-style map中，用于后面分组转换
-                        cellValueSpan.addClasses(parserdStyleResult.getCellValClassList());
+                        cellValueSpan.addClasses(parserdStyleResult.getCellValStyleClassList());
                         tagCellValStyleCompressCache.put(cellValueSpan.getUID(), parserdStyleResult.getCellValCellStyle());
                     } else {
                         cellValueSpan.setStyleMap(parserdStyleResult.getCellValCellStyle());
@@ -484,6 +488,10 @@ public class Excel2Html {
                         "    width: 100%;\n" +
                         "    height: 100%;\n" +
                         "    object-fit: contain;\n" +
+                        "}" +
+                        // 换行的单元格尾部连续空格不占用空间
+                        ".exc-table-cell.wrap-cell .value-end-spaces {\n" +
+                        "    white-space: normal;\n" +
                         "}");
         return htmlPage;
     }

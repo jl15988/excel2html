@@ -19,13 +19,19 @@ public class ParserdStyleResult {
     public Map<String, Object> cellStyle;
     public Map<String, Object> cellContainerStyle;
     public Map<String, Object> cellValCellStyle;
-    public List<String> cellValClassList;
+    // 单元格内容样式 class，与 class不同的是，样式 class 是按判断是否压缩来赋值的
+    public List<String> cellValStyleClassList;
+
+    // 单元格 class
+    public List<String> cellClassList;
 
     public ParserdStyleResult() {
         this.cellStyle = new HashMap<>();
         this.cellContainerStyle = new HashMap<>();
         this.cellValCellStyle = new HashMap<>();
-        this.cellValClassList = new ArrayList<>();
+        this.cellValStyleClassList = new ArrayList<>();
+
+        this.cellClassList = new ArrayList<>();
     }
 
     public ParserdStyleResult addCellStyle(Map<String, Object> cellStyle) {

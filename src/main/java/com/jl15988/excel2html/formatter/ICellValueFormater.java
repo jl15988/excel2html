@@ -1,4 +1,4 @@
-package com.jl15988.excel2html.interfaces;
+package com.jl15988.excel2html.formatter;
 
 import org.apache.poi.ss.usermodel.Cell;
 
@@ -8,7 +8,7 @@ import org.apache.poi.ss.usermodel.Cell;
  * @author Jalon
  * @since 2024/12/5 11:26
  **/
-public interface CellValueFormater {
+public interface ICellValueFormater {
 
     String format(String value, Cell cell);
 }

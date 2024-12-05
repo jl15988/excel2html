@@ -1,7 +1,6 @@
 package com.jl15988.excel2html.parser;
 
 import com.jl15988.excel2html.enums.ParserdCellValueType;
-import com.jl15988.excel2html.formater.CellValueFormater;
 import com.jl15988.excel2html.html.HtmlElement;
 import com.jl15988.excel2html.html.HtmlElementList;
 import com.jl15988.excel2html.model.parser.ParserdCellValue;
@@ -81,7 +80,7 @@ public class CellValueParser {
         if (DateUtil.isCellDateFormatted(cell)) {
             return cell.getDateCellValue().toString();
         } else {
-            return CellValueFormater.formatNumericValue(cell, cell.getNumericCellValue());
+            return CellValueFormatter.formatNumericValue(cell, cell.getNumericCellValue());
         }
     }
 
@@ -115,7 +114,7 @@ public class CellValueParser {
                     resultValue = cellValue.getStringValue();
                     break;
                 case NUMERIC:
-                    resultValue = CellValueFormater.formatNumericValue(cell, cellValue.getNumberValue());
+                    resultValue = CellValueFormatter.formatNumericValue(cell, cellValue.getNumberValue());
                     break;
                 case BOOLEAN:
                     resultValue = String.valueOf(cellValue.getBooleanValue()).toUpperCase(Locale.ROOT);

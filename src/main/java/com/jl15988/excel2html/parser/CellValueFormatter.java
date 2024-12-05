@@ -1,4 +1,4 @@
-package com.jl15988.excel2html.formater;
+package com.jl15988.excel2html.parser;
 
 import org.apache.poi.ss.usermodel.Cell;
 
@@ -10,7 +10,7 @@ import java.math.BigDecimal;
  * @author Jalon
  * @since 2024/11/29 19:23
  **/
-public class CellValueFormater {
+class CellValueFormatter {
 
     /**
      * 获格式化特殊数字

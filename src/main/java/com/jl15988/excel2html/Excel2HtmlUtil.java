@@ -1,5 +1,6 @@
 package com.jl15988.excel2html;
 
+import com.jl15988.excel2html.formatter.ICellValueFormater;
 import com.jl15988.excel2html.html.HtmlPage;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
@@ -53,5 +54,17 @@ public class Excel2HtmlUtil {
      */
     public static HtmlPage toHtml(Sheet sheet, int columnNum, boolean compressStyle, Map<String, XSSFPictureData> embedFileMap) throws IOException {
         return new Excel2Html().setLoadEmbedFile(compressStyle).setEmbedFileMap(embedFileMap).buildHtml(sheet, columnNum);
+    }
+
+    /**
+     * 表格转 html
+     *
+     * @param sheet         表格 sheet
+     * @param columnNum     列数
+     * @param compressStyle 是否压缩样式，默认样式放在标签上，开启后会将大部分重复样式转到 css
+     * @param embedFileMap  嵌入文件映射
+     */
+    public static HtmlPage toHtml(Sheet sheet, int columnNum, boolean compressStyle, ICellValueFormater cellValueFormater, Map<String, XSSFPictureData> embedFileMap) throws IOException {
+        return new Excel2Html().setLoadEmbedFile(compressStyle).setCellValueFormater(cellValueFormater).setEmbedFileMap(embedFileMap).buildHtml(sheet, columnNum);
     }
 }

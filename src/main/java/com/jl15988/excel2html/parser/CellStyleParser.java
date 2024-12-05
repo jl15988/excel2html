@@ -355,10 +355,10 @@ public class CellStyleParser {
         // 对齐方式
         ParserdStyle horizontalAlignStyle = parserCellHorizontalAlignStyle(cell);
         parserdStyleResult.cellValCellStyle.putAll(horizontalAlignStyle.styleMap);
-        parserdStyleResult.cellValClassList.addAll(horizontalAlignStyle.classList);
+        parserdStyleResult.cellValStyleClassList.addAll(horizontalAlignStyle.classList);
         ParserdStyle verticalAlignStyle = parserCellVerticalAlignStyle(cell);
         parserdStyleResult.cellValCellStyle.putAll(verticalAlignStyle.styleMap);
-        parserdStyleResult.cellValClassList.addAll(verticalAlignStyle.classList);
+        parserdStyleResult.cellValStyleClassList.addAll(verticalAlignStyle.classList);
 
         // 边框
         Map<String, Object> cellBorderStyle = parserCellBorderStyle(cell);
@@ -373,6 +373,7 @@ public class CellStyleParser {
         if (wrapText) {
             parserdStyleResult.cellContainerStyle.put("word-break", "break-word");
             parserdStyleResult.cellContainerStyle.put("white-space", "pre-wrap");
+            parserdStyleResult.cellClassList.add("wrap-cell");
         } else {
             parserdStyleResult.cellContainerStyle.put("white-space", "pre");
         }
