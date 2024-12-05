@@ -1,7 +1,10 @@
 package com.jl15988.excel2html.converter;
 
+import org.apache.poi.xssf.usermodel.XSSFColor;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 颜色转换器
@@ -116,6 +119,26 @@ public class ColorConverter {
     }
 
     /**
+     * XSSF颜色转RGBA字符串
+     *
+     * @param xssfColor XSSF颜色
+     */
+    public static String xSSFColorToRGBAString(XSSFColor xssfColor) {
+        if (Objects.isNull(xssfColor)) return null;
+        byte[] rgbWithTint = xssfColor.getRGBWithTint();
+        if (Objects.isNull(rgbWithTint)) return null;
+        byte[] argb = xssfColor.getARGB();
+        if (Objects.isNull(argb)) return null;
+
+        int a = (argb[0] & 255) / 255;
+        int r = rgbWithTint[0] & 255;
+        int g = rgbWithTint[1] & 255;
+        int b = rgbWithTint[2] & 255;
+
+        return String.format("rgba(%d, %d, %d, %d)", r, g, b, a);
+    }
+
+    /**
      * argbHex转rgba
      *
      * @param hex hex
@@ -129,25 +152,16 @@ public class ColorConverter {
     }
 
     /**
-     * argbHex转rgba并通过色调调整颜色
+     * 调整颜色亮度
      *
-     * @param hex hex
+     * @param lum  颜色
+     * @param tint 亮度
      */
-    public static String argbHexToRgbaOfTint(String hex, double tint) {
-        String aHex = hex.substring(0, 2);
-        int r = Integer.parseInt(hex.substring(2, 4), 16);
-        int g = Integer.parseInt(hex.substring(4, 6), 16);
-        int b = Integer.parseInt(hex.substring(6, 8), 16);
-
-        int[] rgb = formatRgbWithTint(r, g, b, tint);
-
-        return "rgb(" + rgb[0] + ", " + rgb[1] + ", " + rgb[2] + ")";
-    }
-
-    public static int[] formatRgbWithTint(int r, int g, int b, double tint) {
-        int red = (int) (r * (1 - tint) + 255 * tint);
-        int green = (int) (g * (1 - tint) + 255 * tint);
-        int blue = (int) (b * (1 - tint) + 255 * tint);
-        return new int[]{red, green, blue};
+    public static byte applyTint(int lum, double tint) {
+        if (tint > 0.0) {
+            return (byte) ((int) ((double) lum * (1.0 - tint) + (255.0 - 255.0 * (1.0 - tint))));
+        } else {
+            return tint < 0.0 ? (byte) ((int) ((double) lum * (1.0 + tint))) : (byte) lum;
+        }
     }
 }

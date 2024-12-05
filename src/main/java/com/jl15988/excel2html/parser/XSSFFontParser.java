@@ -31,12 +31,8 @@ public class XSSFFontParser {
         boolean isUnderline = xssfFont.getUnderline() != Font.U_NONE;
         String fontName = xssfFont.getFontName();
         short fontHeightInPoints = xssfFont.getFontHeightInPoints();
-        String rgbaHex = null;
         XSSFColor xssfColor = xssfFont.getXSSFColor();
-        if (Objects.nonNull(xssfColor)) {
-            String argbHex = xssfColor.getARGBHex();
-            rgbaHex = ColorConverter.argbHexToRgba(argbHex);
-        }
+        String rgba = ColorConverter.xSSFColorToRGBAString(xssfColor);
 
         fontCssStyle.set(isBold, "font-weight", "bold")
                 .set(isItalic, "font-style", "italic")
@@ -44,7 +40,7 @@ public class XSSFFontParser {
                 .set(isUnderline, "text-decoration", "underline")
                 .set("font-family", fontName)
                 .set("font-size", PixelConverter.pointsToPxString(fontHeightInPoints))
-                .set(Objects.nonNull(rgbaHex), "color", rgbaHex);
+                .setIfExists("color", rgba);
 
         return fontCssStyle;
     }

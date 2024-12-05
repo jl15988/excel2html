@@ -4,24 +4,12 @@ import com.jl15988.excel2html.converter.ColorConverter;
 import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.model.parser.ParserdStyle;
 import com.jl15988.excel2html.model.style.CommonCss;
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 单元格样式解析器
@@ -254,11 +242,9 @@ public class CellStyleParser {
             borderStyle = cellStyle.getBorderLeft();
             xSSFBorderColor = cellStyle.getLeftBorderXSSFColor();
         }
-        if (Objects.nonNull(xSSFBorderColor)) {
-            String argbHex = xSSFBorderColor.getARGBHex();
-            if (argbHex != null && !argbHex.isEmpty()) {
-                borderColor = ColorConverter.argbHexToRgba(argbHex);
-            }
+        String rgbaString = ColorConverter.xSSFColorToRGBAString(xSSFBorderColor);
+        if (Objects.nonNull(rgbaString) && !rgbaString.isEmpty()) {
+            borderColor = rgbaString;
         }
 
         if (Objects.isNull(borderStyle)) return styleMap;
@@ -369,19 +355,9 @@ public class CellStyleParser {
         cellStyleMap.putAll(cellBorderStyle);
         // 背景
         XSSFColor fillBgColorColor = cellStyle.getFillBackgroundColorColor();
-        if (Objects.nonNull(fillBgColorColor)) {
-            String argbHex = fillBgColorColor.getARGBHex();
-            if (argbHex != null && !argbHex.isEmpty()) {
-                cellStyleMap.put("background-color", ColorConverter.argbHexToRgbaOfTint(argbHex, fillBgColorColor.getTint()));
-            }
-        }
+        cellStyleMap.putIfAbsent("background-color", ColorConverter.xSSFColorToRGBAString(fillBgColorColor));
         XSSFColor fillForegroundColor = cellStyle.getFillForegroundColorColor();
-        if (Objects.nonNull(fillForegroundColor)) {
-            String argbHex = fillForegroundColor.getARGBHex();
-            if (argbHex != null && !argbHex.isEmpty()) {
-                cellStyleMap.put("background-color", ColorConverter.argbHexToRgbaOfTint(argbHex, fillForegroundColor.getTint()));
-            }
-        }
+        cellStyleMap.putIfAbsent("background-color", ColorConverter.xSSFColorToRGBAString(fillForegroundColor));
         // 换行
         boolean wrapText = cellStyle.getWrapText();
         if (wrapText) {
@@ -393,6 +369,10 @@ public class CellStyleParser {
         // 字体
         int fontIndex = cellStyle.getFontIndex();
         XSSFFont fontAt = (XSSFFont) workbook.getFontAt(fontIndex);
+        // 颜色
+        XSSFColor xssfColor = fontAt.getXSSFColor();
+        String fontRgba = ColorConverter.xSSFColorToRGBAString(xssfColor);
+        cellContainerStyleMap.putIfAbsent("color", fontRgba);
         // 加粗
         if (fontAt.getBold()) {
             cellContainerStyleMap.put("font-weight", "bold");
