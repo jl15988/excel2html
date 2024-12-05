@@ -8,49 +8,232 @@ import com.jl15988.excel2html.html.HtmlElement;
 import com.jl15988.excel2html.html.HtmlMeta;
 import com.jl15988.excel2html.html.HtmlPage;
 import com.jl15988.excel2html.html.IHtmlElement;
+import com.jl15988.excel2html.interfaces.CellValueFormater;
 import com.jl15988.excel2html.model.parser.ParserdCellValue;
-import com.jl15988.excel2html.model.parser.ParserdStyle;
+import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
+import com.jl15988.excel2html.parser.CellEmbedFileParser;
 import com.jl15988.excel2html.parser.CellStyleParser;
 import com.jl15988.excel2html.parser.CellValueParser;
 import com.jl15988.excel2html.parser.DrawingValueParser;
+import com.jl15988.excel2html.utils.FileUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * @author Jalon
- * @since 2024/12/1 14:24
+ * @since 2024/12/4 9:13
  **/
 public class Excel2Html {
 
     /**
-     * 表格转 html
-     *
-     * @param sheet         表格 sheet
-     * @param columnNum     列数
-     * @param compressStyle 是否压缩样式，默认样式放在标签上，开启后会将大部分重复样式转到 css
+     * 文件数据
      */
-    public static HtmlPage toHtml(Sheet sheet, int columnNum, boolean compressStyle, boolean trimCellValue) {
-        return toHtml(sheet, columnNum, compressStyle, trimCellValue, null);
+    private byte[] fileData;
+
+    /**
+     * 文件类型
+     */
+    private String fileType;
+
+    /**
+     * sheet-构建后的 html
+     */
+    private final Map<Integer, HtmlPage> sheetToHtmlMap;
+
+    /**
+     * 是否启用压缩样式
+     */
+    private boolean isCompressStyle = true;
+
+    /**
+     * 是否加载嵌入文件
+     */
+    private boolean isLoadEmbedFile = true;
+
+    /**
+     * 嵌入文件缓存
+     */
+    private Map<String, XSSFPictureData> embedFileMap;
+
+    /**
+     * 工作簿
+     */
+    private Workbook workbook;
+
+    /**
+     * 单元格格式化
+     */
+    private CellValueFormater cellValueFormater;
+
+    public Excel2Html(byte[] fileData) throws IOException {
+        this.fileData = fileData;
+        this.sheetToHtmlMap = new HashMap<>();
+        this.workbook = new XSSFWorkbook(new ByteArrayInputStream(fileData));
+    }
+
+    public Excel2Html(InputStream stream) throws IOException {
+        this(FileUtil.getFileStream(stream));
+    }
+
+    public Excel2Html(File file) throws IOException {
+        this(FileUtil.getFileStream(file));
+    }
+
+    public Excel2Html() {
+        this.sheetToHtmlMap = new HashMap<>();
+    }
+
+    public Excel2Html setCompressStyle(boolean compressStyle) {
+        this.isCompressStyle = compressStyle;
+        return this;
+    }
+
+    public Excel2Html setLoadEmbedFile(boolean loadEmbedFile) {
+        this.isLoadEmbedFile = loadEmbedFile;
+        return this;
+    }
+
+    public Excel2Html setEmbedFileMap(Map<String, XSSFPictureData> embedFileMap) {
+        this.embedFileMap = embedFileMap;
+        return this;
+    }
+
+    public Excel2Html setCellValueFormater(CellValueFormater cellValueFormater) {
+        this.cellValueFormater = cellValueFormater;
+        return this;
     }
 
     /**
-     * 表格转 html
+     * 加载嵌入文件
      *
-     * @param sheet         表格 sheet
-     * @param columnNum     列数
-     * @param compressStyle 是否压缩样式，默认样式放在标签上，开启后会将大部分重复样式转到 css
-     * @param embedFileMap  嵌入文件映射
+     * @throws IOException
      */
-    public static HtmlPage toHtml(Sheet sheet, int columnNum, boolean compressStyle, boolean trimCellValue, Map<String, XSSFPictureData> embedFileMap) {
+    private void doLoadEmbedFile() throws IOException {
+        if (Objects.nonNull(fileData) && this.isLoadEmbedFile && this.embedFileMap == null) {
+            // 解析嵌入图片数据
+            Map<String, String> stringStringMap = CellEmbedFileParser.processZipEntries(new ByteArrayInputStream(fileData));
+            this.embedFileMap = CellEmbedFileParser.processPictures(new ByteArrayInputStream(fileData), stringStringMap);
+        }
+    }
+
+    /**
+     * 获取最大列数
+     *
+     * @param sheet sheet
+     */
+    private int getMaxColNum(Sheet sheet) {
+        short colNum = 0;
+        for (Row row : sheet) {
+            short lastCellNum = row.getLastCellNum();
+            if (lastCellNum > colNum) {
+                colNum = lastCellNum;
+            }
+        }
+        return colNum;
+    }
+
+    public HtmlPage buildHtml(Sheet sheet, Integer colNumber) throws IOException {
+        if (Objects.isNull(sheet)) return null;
+        // 加载嵌入文件
+        this.doLoadEmbedFile();
+
+        // 从 sheet 中获取工作簿
+        if (Objects.isNull(this.workbook)) {
+            this.workbook = sheet.getWorkbook();
+        }
+
+        int sheetIndex = -1;
+        // 尝试从缓存中获取
+        if (Objects.nonNull(this.workbook)) {
+            if (sheet.getWorkbook() == this.workbook) {
+                sheetIndex = this.workbook.getSheetIndex(sheet);
+                if (sheetIndex != -1) {
+                    HtmlPage htmlPage = this.sheetToHtmlMap.get(sheetIndex);
+                    if (Objects.nonNull(htmlPage)) {
+                        return htmlPage;
+                    }
+                }
+            }
+        }
+
+        // 如果没有指定单元格数量则取最大单元格数
+        int colNum;
+        if (Objects.isNull(colNumber)) {
+            colNum = getMaxColNum(sheet);
+        } else {
+            colNum = colNumber;
+        }
+
+        HtmlPage htmlPage = this.doBuildHtml(sheet, colNum);
+        // 缓存结果
+        if (sheetIndex != -1) {
+            this.sheetToHtmlMap.put(sheetIndex, htmlPage);
+        }
+        return htmlPage;
+    }
+
+    public HtmlPage buildHtml(int sheetIndex, Integer colNumber) throws IOException {
+        if (this.workbook == null) {
+            return null;
+        }
+        Sheet sheet = this.workbook.getSheetAt(sheetIndex);
+        return this.buildHtml(sheet, colNumber);
+    }
+
+    public List<HtmlPage> buildHtmlWithStartAndEndIndex(int startSheetIndex, int endSheetIndex, Integer colNumber) throws IOException {
+        if (this.workbook == null) {
+            return null;
+        }
+        this.doLoadEmbedFile();
+
+        int endIndex = endSheetIndex;
+        int numberOfSheets = this.workbook.getNumberOfSheets();
+        if (endIndex > numberOfSheets - 1) {
+            endIndex = numberOfSheets - 1;
+        }
+
+        List<HtmlPage> htmlList = new ArrayList<>();
+
+        for (int i = startSheetIndex; i <= endIndex; i++) {
+            HtmlPage htmlPage = this.buildHtml(i, colNumber);
+            htmlList.add(htmlPage);
+        }
+        return htmlList;
+    }
+
+    public List<HtmlPage> buildHtmlWithStartIndex(int startSheetIndex, Integer colNumber) throws IOException {
+        return this.buildHtmlWithStartAndEndIndex(startSheetIndex, this.workbook.getNumberOfSheets() - 1, colNumber);
+    }
+
+    public HtmlPage buildHtml(Sheet sheet) throws IOException {
+        return this.buildHtml(sheet, null);
+    }
+
+    public HtmlPage buildHtml(int sheetIndex) throws IOException {
+        return this.buildHtml(sheetIndex, null);
+    }
+
+    public List<HtmlPage> buildHtmlWithStartAndEndIndex(int startSheetIndex, int endSheetIndex) throws IOException {
+        return this.buildHtmlWithStartAndEndIndex(startSheetIndex, endSheetIndex, null);
+    }
+
+    public List<HtmlPage> buildHtmlWithStartIndex(int startSheetIndex) throws IOException {
+        return this.buildHtmlWithStartIndex(startSheetIndex, null);
+    }
+
+    private HtmlPage doBuildHtml(Sheet sheet, int columnNum) {
         HtmlPage htmlPage = getHtmlPage();
         HtmlElement div = new HtmlElement("div");
         div.addClass("exc-page");
@@ -69,11 +252,14 @@ public class Excel2Html {
             HtmlElement tr = new HtmlElement("tr");
             for (int cellIndex = 0; cellIndex < columnNum; cellIndex++) {
                 Cell cell = row.getCell(cellIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-                ParserdCellValue parserdCellValue = CellValueParser.parseCellValue(cell, embedFileMap);
+                ParserdCellValue parserdCellValue = CellValueParser.parseCellValue(cell, this.embedFileMap);
                 String cellValue = parserdCellValue.getValue();
-                if (trimCellValue) {
-                    cellValue = cellValue.trim();
+
+                // 单元格内容格式化
+                if (Objects.nonNull(cellValueFormater)) {
+                    cellValue = cellValueFormater.format(cellValue, cell);
                 }
+
                 boolean valueEmpty = cellValue == null || cellValue.isEmpty();
 
                 HtmlElement td = new HtmlElement("td");
@@ -85,71 +271,18 @@ public class Excel2Html {
                     td.addClass("has-data");
                 }
 
-                ParserdStyle parserdStyle = CellStyleParser.parserCellStyle(cell, compressStyle);
+                // 解析单元格样式
+                ParserdStyleResult parserdStyleResult = CellStyleParser.parserCellStyle(cell);
 
-                // 判断是否合并单元格，添加合并单元格属性
-                CellRangeAddress cellAddresses = mergedRegions.stream().filter(address -> address.isInRange(cell)).findFirst().orElse(null);
-                if (Objects.nonNull(cellAddresses)) {
-                    if (cellAddresses.getFirstRow() == cell.getRowIndex() && cellAddresses.getFirstColumn() == cell.getColumnIndex()) {
-                        td.addClass("merged-cell");
-                        // 对合并单元格的第一行第一列单元格处理
-                        int rowSpan = cellAddresses.getLastRow() - cellAddresses.getFirstRow() + 1;
-                        int colSpan = cellAddresses.getLastColumn() - cellAddresses.getFirstColumn() + 1;
-                        if (rowSpan > 1) {
-                            td.addAttribute("rowspan", String.valueOf(rowSpan));
-                        }
-                        if (colSpan > 1) {
-                            td.addAttribute("colspan", String.valueOf(colSpan));
-                        }
-
-                        // 合并单元格样式
-                        // 取最后一行最后一个单元格样式
-                        int lastRowIndex = cellAddresses.getLastRow();
-                        int lastColumnIndex = cellAddresses.getLastColumn();
-                        Row lastRow = sheet.getRow(lastRowIndex);
-                        if (Objects.nonNull(lastRow)) {
-                            Cell lastColumnLastRowCell = lastRow.getCell(lastColumnIndex);
-                            if (Objects.nonNull(lastColumnLastRowCell)) {
-                                ParserdStyle mergedParserdStyle = CellStyleParser.parserCellStyle(lastColumnLastRowCell, compressStyle);
-
-                                mergedParserdStyle.getCellStyle().forEach((name, value) -> {
-                                    if (parserdStyle.hasCellStyle(name)) {
-                                        if ((name.contains("-right") || name.contains("-bottom"))) {
-                                            parserdStyle.addCellStyle(name, value);
-                                        }
-                                    } else {
-                                        parserdStyle.addCellStyle(name, value);
-                                    }
-                                });
-                            }
-                        }
-
-                        double totalHeight = 0;
-                        int firstRowIndex = cellAddresses.getFirstRow();
-                        for (int j = firstRowIndex; j <= lastRowIndex; j++) {
-                            Row rowItem = sheet.getRow(j);
-                            if (Objects.nonNull(rowItem)) {
-                                totalHeight += rowItem.getHeightInPoints();
-                            }
-                        }
-                        String mergedTotalHeight = UnitConverter.convert().convertPointsString(totalHeight);
-                        parserdStyle.addCellContainerStyle("height", mergedTotalHeight);
-                        parserdStyle.addCellContainerStyle("max-height", mergedTotalHeight);
-                        parserdStyle.addCellContainerStyle("min-height", mergedTotalHeight);
-                    } else {
-                        td.addClass("merged-display-cell");
-                        // 忽略被合并的单元格
-                        // todo 为了适配单元格内容显示与否，可能要追加并隐藏元素
-//                        continue;
-                    }
-                }
+                // 解析合并单元格
+                parserMergedCell(mergedRegions, cell, td, parserdStyleResult);
 
                 // 添加样式
-                Map<String, Object> cellStyleMap = parserdStyle.getCellStyle();
+                Map<String, Object> cellStyleMap = parserdStyleResult.getCellStyle();
                 if (cellStyleMap.containsKey("background-color")) {
                     td.addClass("has-bg-color");
                 }
-                if (compressStyle) {
+                if (this.isCompressStyle) {
                     // 添加到tag-style map中，用于后面分组转换
                     tagCellStyleCompressCache.put(td.getUID(), cellStyleMap);
                 } else {
@@ -158,11 +291,11 @@ public class Excel2Html {
 
                 HtmlElement cellContainerSpan = new HtmlElement("span")
                         .addClass("exc-table-cell-container");
-                if (compressStyle) {
+                if (this.isCompressStyle) {
                     // 添加到tag-style map中，用于后面分组转换
-                    tagCellContainerStyleCompressCache.put(cellContainerSpan.getUID(), parserdStyle.getCellContainerStyle());
+                    tagCellContainerStyleCompressCache.put(cellContainerSpan.getUID(), parserdStyleResult.getCellContainerStyle());
                 } else {
-                    cellContainerSpan.setStyleMap(parserdStyle.getCellContainerStyle());
+                    cellContainerSpan.setStyleMap(parserdStyleResult.getCellContainerStyle());
                 }
 
                 if (ParserdCellValueType.HTML_IMG.equals(parserdCellValue.getType())) {
@@ -178,12 +311,12 @@ public class Excel2Html {
                     HtmlElement cellValueSpan = new HtmlElement("span")
                             .addClass("exc-table-val")
                             .setContent(cellValue);
-                    if (compressStyle) {
+                    if (this.isCompressStyle) {
                         // 添加到tag-style map中，用于后面分组转换
-                        cellValueSpan.addClasses(parserdStyle.getCellValClassList());
-                        tagCellValStyleCompressCache.put(cellValueSpan.getUID(), parserdStyle.getCellValCellStyle());
+                        cellValueSpan.addClasses(parserdStyleResult.getCellValClassList());
+                        tagCellValStyleCompressCache.put(cellValueSpan.getUID(), parserdStyleResult.getCellValCellStyle());
                     } else {
-                        cellValueSpan.setStyleMap(parserdStyle.getCellValCellStyle());
+                        cellValueSpan.setStyleMap(parserdStyleResult.getCellValCellStyle());
                     }
                     cellTableSpan.addChildElement(cellValueSpan);
                     cellContainerSpan.addChildElement(cellTableSpan);
@@ -198,13 +331,76 @@ public class Excel2Html {
         htmlPage.addElement(div);
         // 添加图片图形解析结果
         htmlPage.addElements(DrawingValueParser.parserDrawing(sheet));
-        if (compressStyle) {
+        if (this.isCompressStyle) {
             // 添加通用样式
             htmlPage.addStyleContent(new CommonCss().toHtmlString());
             setCompressStyle(htmlPage, tagCellStyleCompressCache, tagCellContainerStyleCompressCache, tagCellValStyleCompressCache);
         }
 
         return htmlPage;
+    }
+
+    /**
+     * 解析合并单元格
+     */
+    private static void parserMergedCell(List<CellRangeAddress> mergedRegions, Cell cell, HtmlElement td, ParserdStyleResult parserdStyleResult) {
+        // 判断是否合并单元格，添加合并单元格属性
+        Sheet sheet = cell.getRow().getSheet();
+        CellRangeAddress cellAddresses = mergedRegions.stream().filter(address -> address.isInRange(cell)).findFirst().orElse(null);
+        if (Objects.nonNull(cellAddresses)) {
+            if (cellAddresses.getFirstRow() == cell.getRowIndex() && cellAddresses.getFirstColumn() == cell.getColumnIndex()) {
+                td.addClass("merged-cell");
+                // 对合并单元格的第一行第一列单元格处理
+                int rowSpan = cellAddresses.getLastRow() - cellAddresses.getFirstRow() + 1;
+                int colSpan = cellAddresses.getLastColumn() - cellAddresses.getFirstColumn() + 1;
+                if (rowSpan > 1) {
+                    td.addAttribute("rowspan", String.valueOf(rowSpan));
+                }
+                if (colSpan > 1) {
+                    td.addAttribute("colspan", String.valueOf(colSpan));
+                }
+
+                // 合并单元格样式
+                // 取最后一行最后一个单元格样式
+                int lastRowIndex = cellAddresses.getLastRow();
+                int lastColumnIndex = cellAddresses.getLastColumn();
+                Row lastRow = sheet.getRow(lastRowIndex);
+                if (Objects.nonNull(lastRow)) {
+                    Cell lastColumnLastRowCell = lastRow.getCell(lastColumnIndex);
+                    if (Objects.nonNull(lastColumnLastRowCell)) {
+                        ParserdStyleResult mergedParserdStyleResult = CellStyleParser.parserCellStyle(lastColumnLastRowCell);
+
+                        mergedParserdStyleResult.getCellStyle().forEach((name, value) -> {
+                            if (parserdStyleResult.hasCellStyle(name)) {
+                                if ((name.contains("-right") || name.contains("-bottom"))) {
+                                    parserdStyleResult.addCellStyle(name, value);
+                                }
+                            } else {
+                                parserdStyleResult.addCellStyle(name, value);
+                            }
+                        });
+                    }
+                }
+
+                double totalHeight = 0;
+                int firstRowIndex = cellAddresses.getFirstRow();
+                for (int j = firstRowIndex; j <= lastRowIndex; j++) {
+                    Row rowItem = sheet.getRow(j);
+                    if (Objects.nonNull(rowItem)) {
+                        totalHeight += rowItem.getHeightInPoints();
+                    }
+                }
+                String mergedTotalHeight = UnitConverter.convert().convertPointsString(totalHeight);
+                parserdStyleResult.addCellContainerStyle("height", mergedTotalHeight);
+                parserdStyleResult.addCellContainerStyle("max-height", mergedTotalHeight);
+                parserdStyleResult.addCellContainerStyle("min-height", mergedTotalHeight);
+            } else {
+                td.addClass("merged-display-cell");
+                // 忽略被合并的单元格
+                // todo 为了适配单元格内容显示与否，可能要追加并隐藏元素
+//                        continue;
+            }
+        }
     }
 
     private static HtmlPage getHtmlPage() {

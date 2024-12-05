@@ -210,24 +210,33 @@ public class HtmlElement implements IHtmlElement<HtmlElement> {
         if (id != null && !id.isEmpty()) {
             stringBuilder.append(" ").append("id=\"").append(id).append("\"");
         }
-        stringBuilder.append(" class=\"").append(String.join(" ", classList)).append("\"");
 
-        stringBuilder.append(" ").append("style=\"");
-        styleMap.forEach((name, value) -> {
-            stringBuilder.append(name).append(":").append(value).append(";");
-        });
-        stringBuilder.append("\"");
+        if (classList != null && !classList.isEmpty()) {
+            stringBuilder.append(" class=\"").append(String.join(" ", classList)).append("\"");
+        }
 
-        attrsMap.forEach((name, value) -> {
-            stringBuilder.append(" ").append(name).append("=\"").append(value).append("\"");
-        });
+        if (styleMap != null && !styleMap.isEmpty()) {
+            stringBuilder.append(" ").append("style=\"");
+            styleMap.forEach((name, value) -> {
+                stringBuilder.append(name).append(":").append(value).append(";");
+            });
+            stringBuilder.append("\"");
+        }
+
+        if (attrsMap != null && !attrsMap.isEmpty()) {
+            attrsMap.forEach((name, value) -> {
+                stringBuilder.append(" ").append(name).append("=\"").append(value).append("\"");
+            });
+        }
         stringBuilder.append(">");
 
         if (content != null) {
             stringBuilder.append(content);
         } else {
             stringBuilder.append("\n");
-            stringBuilder.append(childrenList.stream().map(IHtmlElement::toHtmlString).collect(Collectors.joining("\n")));
+            if (childrenList != null && !childrenList.isEmpty()) {
+                stringBuilder.append(childrenList.stream().map(IHtmlElement::toHtmlString).collect(Collectors.joining("\n")));
+            }
         }
         stringBuilder.append("</").append(tagName).append(">");
         return stringBuilder.toString();

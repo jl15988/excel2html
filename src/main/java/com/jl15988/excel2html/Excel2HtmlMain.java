@@ -1,7 +1,9 @@
 package com.jl15988.excel2html;
 
 import com.jl15988.excel2html.utils.FileUtil;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -34,8 +36,12 @@ public class Excel2HtmlMain {
             assert fileData != null;
             FileOutputStream fos = new FileOutputStream(htmlFilePath);
 
-            Excel2HtmlBuilder excel2HtmlBuilder = new Excel2HtmlBuilder(new File(excelFilePath));
-            String htmlString = excel2HtmlBuilder.buildHtml(0).toHtmlString();
+            XSSFWorkbook sheets = new XSSFWorkbook(new ByteArrayInputStream(fileData));
+
+            String htmlString = Excel2HtmlUtil.toHtml(sheets.getSheetAt(0)).toHtmlString();
+
+//            Excel2Html excel2Html = new Excel2Html(new File(excelFilePath));
+//            String htmlString = excel2Html.buildHtml(0).toHtmlString();
 
             fos.write((htmlString == null ? "" : htmlString).getBytes(StandardCharsets.UTF_8));
 

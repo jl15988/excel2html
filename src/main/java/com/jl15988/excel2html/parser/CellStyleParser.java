@@ -3,6 +3,7 @@ package com.jl15988.excel2html.parser;
 import com.jl15988.excel2html.converter.ColorConverter;
 import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.model.parser.ParserdStyle;
+import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
@@ -26,27 +27,30 @@ public class CellStyleParser {
      * @param formulaResultType 当前单元格公式结果类型
      * @return 样式
      */
-    public static Map<String, Object> parserCellAlignGeneralStyle(CellType cellType, CellType formulaResultType) {
-        Map<String, Object> styleMap = new HashMap<>();
+    public static ParserdStyle parserCellAlignGeneralStyle(CellType cellType, CellType formulaResultType) {
+        ParserdStyle parserdStyle = new ParserdStyle();
         switch (cellType) {
             case NUMERIC:
-                styleMap.put("text-align", "right");
-                styleMap.put("justify-content", "flex-end");
+                parserdStyle.styleMap.put("text-align", "right");
+                parserdStyle.styleMap.put("justify-content", "flex-end");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_GENERAL_NUMERIC);
                 break;
             case STRING:
-                styleMap.put("text-align", "left");
-                styleMap.put("justify-content", "flex-start");
+                parserdStyle.styleMap.put("text-align", "left");
+                parserdStyle.styleMap.put("justify-content", "flex-start");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_GENERAL_STRING);
                 break;
             case BOOLEAN:
-                styleMap.put("text-align", "center");
-                styleMap.put("justify-content", "center");
+                parserdStyle.styleMap.put("text-align", "center");
+                parserdStyle.styleMap.put("justify-content", "center");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_GENERAL_BOOLEAN);
                 break;
         }
         if (Objects.nonNull(formulaResultType) && cellType == CellType.FORMULA) {
-            Map<String, Object> styleMap2 = parserCellAlignGeneralStyle(formulaResultType, null);
-            styleMap.putAll(styleMap2);
+            ParserdStyle parserdStyleFormula = parserCellAlignGeneralStyle(formulaResultType, null);
+            parserdStyle.merge(parserdStyleFormula);
         }
-        return styleMap;
+        return parserdStyle;
     }
 
     /**
@@ -76,10 +80,10 @@ public class CellStyleParser {
         return classList;
     }
 
-    public static Map<String, Object> parserCellHorizontalAlignStyle(Cell cell) {
+    public static ParserdStyle parserCellHorizontalAlignStyle(Cell cell) {
+        ParserdStyle parserdStyle = new ParserdStyle();
         // 水平对齐方式
         HorizontalAlignment alignment = cell.getCellStyle().getAlignment();
-        Map<String, Object> styleMap = new HashMap<>();
         switch (alignment) {
             case GENERAL:
                 // 通用对齐方式。通常，文本数据左对齐，数字、日期和时间右对齐，布尔类型居中。
@@ -87,43 +91,50 @@ public class CellStyleParser {
                 if (cell.getCellType() == CellType.FORMULA) {
                     formulaResultType = cell.getCachedFormulaResultType();
                 }
-                Map<String, Object> generalStyle = parserCellAlignGeneralStyle(cell.getCellType(), formulaResultType);
-                styleMap.putAll(generalStyle);
+                ParserdStyle parserdStyleGeneral = parserCellAlignGeneralStyle(cell.getCellType(), formulaResultType);
+                parserdStyle.merge(parserdStyleGeneral);
                 break;
             case LEFT:
                 // 左对齐。单元格内容靠左边缘对齐。
-                styleMap.put("text-align", "left");
-                styleMap.put("justify-content", "flex-start");
+                parserdStyle.styleMap.put("text-align", "left");
+                parserdStyle.styleMap.put("justify-content", "flex-start");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_LEFT);
                 break;
             case CENTER:
                 // 居中对齐。单元格内容在水平方向上居中对齐。
-                styleMap.put("text-align", "center");
-                styleMap.put("justify-content", "center");
+                parserdStyle.styleMap.put("text-align", "center");
+                parserdStyle.styleMap.put("justify-content", "center");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_CENTER);
                 break;
             case RIGHT:
                 // 右对齐。单元格内容靠右边缘对齐。
-                styleMap.put("text-align", "right");
-                styleMap.put("justify-content", "flex-end");
+                parserdStyle.styleMap.put("text-align", "right");
+                parserdStyle.styleMap.put("justify-content", "flex-end");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_RIGHT);
                 break;
             case FILL:
                 // 填充对齐。单元格内容将填充整个单元格的宽度。
                 // todo 由于css不兼容问题无法实现
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_FILL);
                 break;
             case JUSTIFY:
                 // 两端对齐。单元格内容将左右对齐，并在中间填充空格以达到两端对齐的效果。换行时第一行两端对齐
-                styleMap.put("text-align", "justify");
+                parserdStyle.styleMap.put("text-align", "justify");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_JUSTIFY);
                 break;
             case CENTER_SELECTION:
                 // 跨多个单元格居中对齐。当选择多个单元格并设置此对齐方式时，内容将在所选单元格的区域内居中对齐。
-                styleMap.put("text-align", "center");
+                parserdStyle.styleMap.put("text-align", "center");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_CENTER_SELECTION);
                 break;
             case DISTRIBUTED:
                 // 分散对齐。单元格中的每一行文本中的每个单词将均匀分布在单元格的宽度内，左右边距对齐。所有行两端对齐
-                styleMap.put("text-align", "justify");
-                styleMap.put("text-align-last", "justify");
+                parserdStyle.styleMap.put("text-align", "justify");
+                parserdStyle.styleMap.put("text-align-last", "justify");
+                parserdStyle.classList.add(CommonCss.ALIGN_HORIZONTAL_DISTRIBUTED);
                 break;
         }
-        return styleMap;
+        return parserdStyle;
     }
 
     public static List<String> parserCellHorizontalAlignStyleClass(Cell cell) {
@@ -173,28 +184,35 @@ public class CellStyleParser {
         return classList;
     }
 
-    public static Map<String, Object> parserCellVerticalAlignStyle(Cell cell) {
-        Map<String, Object> styleMap = new HashMap<>();
+    public static ParserdStyle parserCellVerticalAlignStyle(Cell cell) {
+        ParserdStyle parserdStyle = new ParserdStyle();
         // 垂直对齐方式
         VerticalAlignment verticalAlignment = cell.getCellStyle().getVerticalAlignment();
         switch (verticalAlignment) {
             case TOP:
                 // 顶部对齐
-                styleMap.put("vertical-align", "baseline");
-                styleMap.put("align-items", "flex-start");
+                parserdStyle.styleMap.put("vertical-align", "baseline");
+                parserdStyle.styleMap.put("align-items", "flex-start");
+                parserdStyle.classList.add(CommonCss.ALIGN_VERTICAL_TOP);
                 break;
             case CENTER:
-                styleMap.put("vertical-align", "middle");
-                styleMap.put("align-items", "center");
+                parserdStyle.styleMap.put("vertical-align", "middle");
+                parserdStyle.styleMap.put("align-items", "center");
+                parserdStyle.classList.add(CommonCss.ALIGN_VERTICAL_CENTER);
                 break;
             case BOTTOM:
-                styleMap.put("vertical-align", "bottom");
-                styleMap.put("align-items", "flex-end");
+                parserdStyle.styleMap.put("vertical-align", "bottom");
+                parserdStyle.styleMap.put("align-items", "flex-end");
+                parserdStyle.classList.add(CommonCss.ALIGN_VERTICAL_BOTTOM);
                 break;
             case JUSTIFY:
+                parserdStyle.classList.add(CommonCss.ALIGN_VERTICAL_JUSTIFY);
+                break;
             case DISTRIBUTED:
+                parserdStyle.classList.add(CommonCss.ALIGN_VERTICAL_DISTRIBUTED);
+                break;
         }
-        return styleMap;
+        return parserdStyle;
     }
 
     public static List<String> parserCellVerticalAlignStyleClass(Cell cell) {
@@ -311,11 +329,8 @@ public class CellStyleParser {
         return styleMap;
     }
 
-    public static ParserdStyle parserCellStyle(Cell cell, boolean compressStyle) {
-        Map<String, Object> cellStyleMap = new HashMap<>();
-        Map<String, Object> cellContainerStyleMap = new HashMap<>();
-        Map<String, Object> cellValCellStyleMap = new HashMap<>();
-        List<String> cellValClassList = new ArrayList<>();
+    public static ParserdStyleResult parserCellStyle(Cell cell) {
+        ParserdStyleResult parserdStyleResult = new ParserdStyleResult();
 
         Row row = cell.getRow();
         Sheet sheet = row.getSheet();
@@ -326,45 +341,40 @@ public class CellStyleParser {
         // 行高
         float heightInPoints = row.getHeightInPoints();
         String cellHeight = UnitConverter.convert().convertPointsString(heightInPoints);
-        cellContainerStyleMap.put("height", cellHeight);
-        cellContainerStyleMap.put("max-height", cellHeight);
-        cellContainerStyleMap.put("min-height", cellHeight);
+        parserdStyleResult.cellContainerStyle.put("height", cellHeight);
+        parserdStyleResult.cellContainerStyle.put("max-height", cellHeight);
+        parserdStyleResult.cellContainerStyle.put("min-height", cellHeight);
         // 列宽
         int columnIndex = cell.getColumnIndex();
         float columnWidthInPixels = sheet.getColumnWidthInPixels(columnIndex);
         String cellWidth = UnitConverter.convert().usePx().convertCellPixelsString(columnWidthInPixels);
-        cellStyleMap.put("width", cellWidth);
-        cellStyleMap.put("max-width", cellWidth);
-        cellStyleMap.put("min-width", cellWidth);
+        parserdStyleResult.cellStyle.put("width", cellWidth);
+        parserdStyleResult.cellStyle.put("max-width", cellWidth);
+        parserdStyleResult.cellStyle.put("min-width", cellWidth);
 
         // 对齐方式
-        if (compressStyle) {
-            List<String> horizontalAlignStyle = parserCellHorizontalAlignStyleClass(cell);
-            cellValClassList.addAll(horizontalAlignStyle);
-            List<String> verticalAlignStyle = parserCellVerticalAlignStyleClass(cell);
-            cellValClassList.addAll(verticalAlignStyle);
-        } else {
-            Map<String, Object> horizontalAlignStyle = parserCellHorizontalAlignStyle(cell);
-            cellValCellStyleMap.putAll(horizontalAlignStyle);
-            Map<String, Object> verticalAlignStyle = parserCellVerticalAlignStyle(cell);
-            cellValCellStyleMap.putAll(verticalAlignStyle);
-        }
+        ParserdStyle horizontalAlignStyle = parserCellHorizontalAlignStyle(cell);
+        parserdStyleResult.cellValCellStyle.putAll(horizontalAlignStyle.styleMap);
+        parserdStyleResult.cellValClassList.addAll(horizontalAlignStyle.classList);
+        ParserdStyle verticalAlignStyle = parserCellVerticalAlignStyle(cell);
+        parserdStyleResult.cellValCellStyle.putAll(verticalAlignStyle.styleMap);
+        parserdStyleResult.cellValClassList.addAll(verticalAlignStyle.classList);
 
         // 边框
         Map<String, Object> cellBorderStyle = parserCellBorderStyle(cell);
-        cellStyleMap.putAll(cellBorderStyle);
+        parserdStyleResult.cellStyle.putAll(cellBorderStyle);
         // 背景
         XSSFColor fillBgColorColor = cellStyle.getFillBackgroundColorColor();
-        cellStyleMap.putIfAbsent("background-color", ColorConverter.xSSFColorToRGBAString(fillBgColorColor));
+        parserdStyleResult.cellStyle.putIfAbsent("background-color", ColorConverter.xSSFColorToRGBAString(fillBgColorColor));
         XSSFColor fillForegroundColor = cellStyle.getFillForegroundColorColor();
-        cellStyleMap.putIfAbsent("background-color", ColorConverter.xSSFColorToRGBAString(fillForegroundColor));
+        parserdStyleResult.cellStyle.putIfAbsent("background-color", ColorConverter.xSSFColorToRGBAString(fillForegroundColor));
         // 换行
         boolean wrapText = cellStyle.getWrapText();
         if (wrapText) {
-            cellContainerStyleMap.put("word-break", "break-word");
-            cellContainerStyleMap.put("white-space", "pre-wrap");
+            parserdStyleResult.cellContainerStyle.put("word-break", "break-word");
+            parserdStyleResult.cellContainerStyle.put("white-space", "pre-wrap");
         } else {
-            cellContainerStyleMap.put("white-space", "pre");
+            parserdStyleResult.cellContainerStyle.put("white-space", "pre");
         }
         // 字体
         int fontIndex = cellStyle.getFontIndex();
@@ -372,29 +382,29 @@ public class CellStyleParser {
         // 颜色
         XSSFColor xssfColor = fontAt.getXSSFColor();
         String fontRgba = ColorConverter.xSSFColorToRGBAString(xssfColor);
-        cellContainerStyleMap.putIfAbsent("color", fontRgba);
+        parserdStyleResult.cellContainerStyle.putIfAbsent("color", fontRgba);
         // 加粗
         if (fontAt.getBold()) {
-            cellContainerStyleMap.put("font-weight", "bold");
+            parserdStyleResult.cellContainerStyle.put("font-weight", "bold");
         }
         // 大小
         short fontHeightInPoints = fontAt.getFontHeightInPoints();
-        cellContainerStyleMap.put("font-size", UnitConverter.convert().convertPointsString(fontHeightInPoints));
+        parserdStyleResult.cellContainerStyle.put("font-size", UnitConverter.convert().convertPointsString(fontHeightInPoints));
         // 斜体
         if (fontAt.getItalic()) {
-            cellContainerStyleMap.put("font-style", "italic");
+            parserdStyleResult.cellContainerStyle.put("font-style", "italic");
         }
         // 删除线
         if (fontAt.getStrikeout()) {
-            cellContainerStyleMap.put("text-decoration", "line-through");
+            parserdStyleResult.cellContainerStyle.put("text-decoration", "line-through");
         }
         // 下划线
         if (fontAt.getUnderline() != Font.U_NONE) {
-            cellContainerStyleMap.put("text-decoration", "underline");
+            parserdStyleResult.cellContainerStyle.put("text-decoration", "underline");
         }
         String fontName = fontAt.getFontName();
-        cellContainerStyleMap.put("font-family", fontName);
+        parserdStyleResult.cellContainerStyle.put("font-family", fontName);
 
-        return new ParserdStyle(cellStyleMap, cellContainerStyleMap, cellValCellStyleMap, cellValClassList);
+        return parserdStyleResult;
     }
 }
