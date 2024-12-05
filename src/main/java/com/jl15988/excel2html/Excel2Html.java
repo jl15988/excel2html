@@ -214,79 +214,81 @@ public class Excel2Html {
                         .builder()
                         .addAttr("charset", "UTF-8")
                         .build())
-                .addStyleContent("* {\n" +
-                        "            padding: 0;\n" +
-                        "            margin: 0;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        .exc-page {\n" +
-                        "            position: relative;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        table {\n" +
-                        "            table-layout: fixed;\n" +
-                        "            box-sizing: border-box;\n" +
-                        "            border-collapse: collapse;\n" +
-                        "            border-spacing: 0;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        td {\n" +
-                        "            overflow: visible;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        .exc-table-cell.merged-cell {\n" +
-                        "            overflow: hidden;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        .exc-table-cell.merged-display-cell {\n" +
-                        "            display: none;\n" +
-                        "        }\n" +
-                        "\n" +
+                .addStyleContent("" +
+//                        "* {\n" +
+//                        "            padding: 0;\n" +
+//                        "            margin: 0;\n" +
+//                        "        }\n" +
+//                        "\n" +
+                        // 基础样式
+                        ".exc-page {\n" +
+                        "    position: relative;\n" +
+                        "}\n" +
+                        "table {\n" +
+                        "    table-layout: fixed;\n" +
+                        "    box-sizing: border-box;\n" +
+                        "    border-collapse: collapse;\n" +
+                        "    border-spacing: 0;\n" +
+                        "}\n" +
+                        "td {\n" +
+                        "    overflow: visible;\n" +
+                        "}\n" +
+                        // 合并的单元格超出隐藏
+                        ".exc-table-cell.merged-cell {\n" +
+                        "    overflow: hidden;\n" +
+                        "}\n" +
+                        // 合并隐藏的隐藏
+                        ".exc-table-cell.merged-display-cell {\n" +
+                        "    display: none;\n" +
+                        "}\n" +
                         // 原本container直接包含图片数据，但是无法使用背景色覆盖前者，现又添加了一层img-container
-                        "        .exc-table-cell.embed-img-data .exc-table-cell-container {\n" +
-//                        "            display: block;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        .exc-table-cell.has-data .exc-table-cell-table {\n" +
-                        "            background-color: white;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        .exc-table-cell.has-bg-color .exc-table-cell-table {\n" +
-                        "            background-color: rgba(0, 0, 0, 0);\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        .exc-table-cell + .has-data {\n" +
+                        ".exc-table-cell.embed-img-data .exc-table-cell-container {\n" +
+//                        "    display: block;\n" +
+                        "}\n" +
+                        // 有数据的单元格添加背景色
+                        ".exc-table-cell.has-data .exc-table-cell-table {\n" +
+                        "    background-color: white;\n" +
+                        "}\n" +
+                        // 有背景的单元格背景调整背景色
+                        ".exc-table-cell.has-bg-color .exc-table-cell-table {\n" +
+                        "    background-color: rgba(0, 0, 0, 0);\n" +
+                        "}\n" +
+                        ".exc-table-cell.has-bg-color .embed-img-container {\n" +
+                        "    background-color: rgba(0, 0, 0, 0);\n" +
+                        "}\n" +
                         // 本来通过每个单元格添加是否有值来限制兄弟节点超出隐藏，但是不能夸单元格，然后改为了通过有数据添加背景色来覆盖前者数据
-//                        "            overflow: hidden;\n" +
-                        "        }\n" +
-                        "\n" +
-                        "        .exc-table-cell-container {\n" +
-                        "            display: flex;\n" +
-                        "            width: 100%;\n" +
-                        "        }\n" +
-                        "        \n" +
-                        "        .exc-table-cell-table {\n" +
-                        "            display: table;\n" +
-                        "            width: 100%;\n" +
-                        "        }\n" +
-                        "        \n" +
-                        "        .exc-table-val {\n" +
-                        "            display: table-cell;\n" +
-                        "            padding-top: 2px;\n" +
-                        "        }" +
-                        "        \n" +
-                        "        .embed-img-container {\n" +
-                        "            display: block;\n" +
-                        "            width: 100%;\n" +
-                        "            height: 100%;\n" +
-                        "            background-color: white;\n" +
-                        "        }" +
-                        "        \n" +
-                        "        .embed_img {\n" +
-                        "            width: 100%;\n" +
-                        "            height: 100%;\n" +
-                        "            object-fit: contain;\n" +
-                        "        }");
+                        ".exc-table-cell + .has-data {\n" +
+//                        "    overflow: hidden;\n" +
+                        "}\n" +
+                        // 下面的元素、table、value容器是为了尽可能的还原 excel 单元格展示样式
+                        // 单元格内元素容器
+                        ".exc-table-cell-container {\n" +
+                        "    display: flex;\n" +
+                        "    width: 100%;\n" +
+                        "}\n" +
+                        // 单元格内 table 容器
+                        ".exc-table-cell-table {\n" +
+                        "    display: table;\n" +
+                        "    width: 100%;\n" +
+                        "}\n" +
+                        // 单元格内 value 容器
+                        ".exc-table-val {\n" +
+                        "    display: table-cell;\n" +
+                        "    padding-top: 2px;\n" +
+                        "}" +
+                        // 单元格内图片容器，为了还原嵌入图片样式
+                        ".embed-img-container {\n" +
+                        "    display: block;\n" +
+                        "    width: 100%;\n" +
+                        "    height: 100%;\n" +
+                        "    background-color: white;\n" +
+                        "}" +
+                        // 嵌入图片
+                        ".embed_img {\n" +
+                        "    width: 100%;\n" +
+                        "    height: 100%;\n" +
+                        "    object-fit: contain;\n" +
+                        "}");
         return htmlPage;
     }
 
