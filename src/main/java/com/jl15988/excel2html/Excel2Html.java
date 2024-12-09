@@ -6,6 +6,8 @@ import com.jl15988.excel2html.converter.style.StyleGroupHtml;
 import com.jl15988.excel2html.enums.ParserdCellValueType;
 import com.jl15988.excel2html.formatter.DefaultCellValueFormatter;
 import com.jl15988.excel2html.formatter.ICellValueFormater;
+import com.jl15988.excel2html.handler.ICellHandler;
+import com.jl15988.excel2html.handler.ITrElementHandler;
 import com.jl15988.excel2html.html.HtmlElement;
 import com.jl15988.excel2html.html.HtmlMeta;
 import com.jl15988.excel2html.html.HtmlPage;
@@ -77,6 +79,16 @@ public class Excel2Html {
      */
     private ICellValueFormater cellValueFormater;
 
+    /**
+     * tr 元素处理器
+     */
+    private ITrElementHandler trElementHandler;
+
+    /**
+     * 单元格处理器
+     */
+    private ICellHandler cellHandler;
+
     public Excel2Html(byte[] fileData) throws IOException {
         this.fileData = fileData;
         this.sheetToHtmlMap = new HashMap<>();
@@ -114,6 +126,16 @@ public class Excel2Html {
 
     public Excel2Html setCellValueFormater(ICellValueFormater cellValueFormater) {
         this.cellValueFormater = cellValueFormater;
+        return this;
+    }
+
+    public Excel2Html setTrElementHandler(ITrElementHandler trElementHandler) {
+        this.trElementHandler = trElementHandler;
+        return this;
+    }
+
+    public Excel2Html setCellHandler(ICellHandler cellHandler) {
+        this.cellHandler = cellHandler;
         return this;
     }
 
@@ -332,6 +354,12 @@ public class Excel2Html {
                 // 解析合并单元格
                 parserMergedCell(mergedRegions, cell, td, parserdStyleResult);
 
+                // 执行单元格处理器
+                if (Objects.nonNull(this.cellHandler)) {
+                    this.cellHandler.handle(td, rowIndex, cellIndex, sheet);
+                    this.cellHandler.handleStyle(parserdStyleResult, cell, rowIndex, cellIndex);
+                }
+
                 // 添加样式
                 Map<String, Object> cellStyleMap = parserdStyleResult.getCellStyle();
                 if (cellStyleMap.containsKey("background-color")) {
@@ -380,6 +408,12 @@ public class Excel2Html {
                 td.addChildElement(cellContainerSpan);
                 tr.addChildElement(td);
             }
+
+            // 执行 tr 元素处理器
+            if (Objects.nonNull(this.trElementHandler)) {
+                tr = this.trElementHandler.handle(tr, rowIndex, sheet);
+            }
+
             table.addChildElement(tr);
         }
         div.addChildElement(table);

@@ -1,5 +1,6 @@
 package com.jl15988.excel2html.html;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -84,6 +85,16 @@ public interface IHtmlElement<T> {
     }
 
     /**
+     * 判断是否包含某几个class
+     *
+     * @param classes class名
+     */
+    default boolean hasClasses(String... classes) {
+        List<String> classList = Arrays.asList(classes);
+        return getClassList().stream().anyMatch(classList::contains);
+    }
+
+    /**
      * 获取样式
      */
     Map<String, Object> getStyleMap();
@@ -139,6 +150,16 @@ public interface IHtmlElement<T> {
     }
 
     /**
+     * 判断是否有某几个样式
+     *
+     * @param styles 样式名
+     */
+    default boolean hasStyles(String... styles) {
+        List<String> styleList = Arrays.asList(styles);
+        return getStyleMap().keySet().stream().anyMatch(styleList::contains);
+    }
+
+    /**
      * 判断是否有某个样式，包括值
      *
      * @param styleName 样式名
@@ -190,6 +211,16 @@ public interface IHtmlElement<T> {
      */
     default boolean hasAttribute(String name) {
         return getAttributeMap().containsKey(name);
+    }
+
+    /**
+     * 判断是否包含某几个属性
+     *
+     * @param attributes 属性名
+     */
+    default boolean hasAttributes(String... attributes) {
+        List<String> attributeList = Arrays.asList(attributes);
+        return getAttributeMap().keySet().stream().anyMatch(attributeList::contains);
     }
 
     /**
