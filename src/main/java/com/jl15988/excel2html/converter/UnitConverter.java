@@ -75,4 +75,48 @@ public class UnitConverter {
         return formatVal(convertEmus(emus)) + getUnit();
     }
 
+    public float columnWidthToPixels(int columnWidth) {
+        return (float) ((double) columnWidth * 7.001699924468994);
+    }
+
+    public String convertColumnWidthString(int columnWidth) {
+        return convertCellPixelsString(columnWidthToPixels(columnWidth));
+    }
+
+    /**
+     * 磅转厘米
+     *
+     * @param points 磅
+     */
+    public double convertPointsToCM(double points) {
+        return points * 0.03527;
+    }
+
+    /**
+     * 厘米转磅
+     *
+     * @param cm 厘米
+     */
+    public double convertCMToPoints(double cm) {
+        return cm / 0.03527;
+    }
+
+    /**
+     * 英寸转厘米
+     *
+     * @param inch 英寸
+     */
+    public double convertInchToCM(double inch) {
+        return inch * 2.54;
+    }
+
+    /**
+     * 英寸转磅
+     *
+     * @param inch 英寸
+     */
+    public double convertInchToPoints(double inch) {
+        return inch * 2.54 / 0.03527;
+    }
+
 }

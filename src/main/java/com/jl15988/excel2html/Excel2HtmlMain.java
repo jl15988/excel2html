@@ -4,7 +4,6 @@ import com.jl15988.excel2html.utils.FileUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.URL;
@@ -38,7 +37,7 @@ public class Excel2HtmlMain {
 
             XSSFWorkbook sheets = new XSSFWorkbook(new ByteArrayInputStream(fileData));
 
-            String htmlString = Excel2HtmlUtil.toHtml(sheets.getSheetAt(0)).toHtmlString();
+            String htmlString = Excel2HtmlHelper.toHtml(sheets.getSheetAt(0)).toHtmlString();
 
 //            Excel2Html excel2Html = new Excel2Html(new File(excelFilePath));
 //            String htmlString = excel2Html.buildHtml(0).toHtmlString();

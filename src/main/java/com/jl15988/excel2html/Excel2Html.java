@@ -13,7 +13,6 @@ import com.jl15988.excel2html.html.IHtmlElement;
 import com.jl15988.excel2html.model.parser.ParserdCellValue;
 import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
-import com.jl15988.excel2html.parser.CellEmbedFileParser;
 import com.jl15988.excel2html.parser.CellStyleParser;
 import com.jl15988.excel2html.parser.CellValueParser;
 import com.jl15988.excel2html.parser.DrawingValueParser;
@@ -125,29 +124,22 @@ public class Excel2Html {
      */
     private void doLoadEmbedFile() throws IOException {
         if (Objects.nonNull(fileData) && this.isLoadEmbedFile && this.embedFileMap == null) {
-            // 解析嵌入图片数据
-            Map<String, String> stringStringMap = CellEmbedFileParser.processZipEntries(new ByteArrayInputStream(fileData));
-            this.embedFileMap = CellEmbedFileParser.processPictures(new ByteArrayInputStream(fileData), stringStringMap);
+            this.embedFileMap = Excel2HtmlUtil.doLoadEmbedFile(fileData);
         }
     }
 
     /**
-     * 获取最大列数
+     * 构建 html
      *
-     * @param sheet sheet
+     * @param sheet         sheet
+     * @param startRowIndex 开始行
+     * @param endRowIndex   结束行
+     * @param startColIndex 开始列
+     * @param endColIndex   结束列
+     * @return html 结果
+     * @throws IOException
      */
-    private int getMaxColNum(Sheet sheet) {
-        short colNum = 0;
-        for (Row row : sheet) {
-            short lastCellNum = row.getLastCellNum();
-            if (lastCellNum > colNum) {
-                colNum = lastCellNum;
-            }
-        }
-        return colNum;
-    }
-
-    public HtmlPage buildHtml(Sheet sheet, Integer colNumber) throws IOException {
+    public HtmlPage buildHtml(Sheet sheet, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex) throws IOException {
         if (Objects.isNull(sheet)) return null;
         // 加载嵌入文件
         this.doLoadEmbedFile();
@@ -171,15 +163,17 @@ public class Excel2Html {
             }
         }
 
+        int rowEndIndex = Optional.ofNullable(endRowIndex).orElse(Excel2HtmlUtil.getMaxRowNum(sheet) - 1);
+        if (rowEndIndex < 0) {
+            return null;
+        }
         // 如果没有指定单元格数量则取最大单元格数
-        int colNum;
-        if (Objects.isNull(colNumber)) {
-            colNum = getMaxColNum(sheet);
-        } else {
-            colNum = colNumber;
+        int colEndIndex = Optional.ofNullable(endColIndex).orElse(Excel2HtmlUtil.getMaxColNum(sheet) - 1);
+        if (colEndIndex < 0) {
+            return null;
         }
 
-        HtmlPage htmlPage = this.doBuildHtml(sheet, colNum);
+        HtmlPage htmlPage = this.doBuildHtml(sheet, startRowIndex, rowEndIndex, startColIndex, colEndIndex);
         // 缓存结果
         if (sheetIndex != -1) {
             this.sheetToHtmlMap.put(sheetIndex, htmlPage);
@@ -187,15 +181,38 @@ public class Excel2Html {
         return htmlPage;
     }
 
-    public HtmlPage buildHtml(int sheetIndex, Integer colNumber) throws IOException {
+    /**
+     * 构建 html
+     *
+     * @param sheetIndex    sheet 下标
+     * @param startRowIndex 开始行
+     * @param endRowIndex   结束行
+     * @param startColIndex 开始列
+     * @param endColIndex   结束列
+     * @return html 结果
+     * @throws IOException
+     */
+    public HtmlPage buildHtmlWidthSheetIndex(int sheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex) throws IOException {
         if (this.workbook == null) {
             return null;
         }
         Sheet sheet = this.workbook.getSheetAt(sheetIndex);
-        return this.buildHtml(sheet, colNumber);
+        return this.buildHtml(sheet, startRowIndex, endRowIndex, startColIndex, endColIndex);
     }
 
-    public List<HtmlPage> buildHtmlWithStartAndEndIndex(int startSheetIndex, int endSheetIndex, Integer colNumber) throws IOException {
+    /**
+     * 构建 html
+     *
+     * @param startSheetIndex sheet 开始下标
+     * @param endSheetIndex   sheet 结束下标
+     * @param startRowIndex   开始行
+     * @param endRowIndex     结束行
+     * @param startColIndex   开始列
+     * @param endColIndex     结束列
+     * @return html 结果
+     * @throws IOException
+     */
+    public List<HtmlPage> buildHtmlWidthSheetIndex(Integer startSheetIndex, Integer endSheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex) throws IOException {
         if (this.workbook == null) {
             return null;
         }
@@ -209,34 +226,48 @@ public class Excel2Html {
 
         List<HtmlPage> htmlList = new ArrayList<>();
 
-        for (int i = startSheetIndex; i <= endIndex; i++) {
-            HtmlPage htmlPage = this.buildHtml(i, colNumber);
+        for (int i = Optional.ofNullable(startSheetIndex).orElse(0); i <= endIndex; i++) {
+            HtmlPage htmlPage = this.buildHtmlWidthSheetIndex(i, startRowIndex, endRowIndex, startColIndex, endColIndex);
             htmlList.add(htmlPage);
         }
         return htmlList;
     }
 
-    public List<HtmlPage> buildHtmlWithStartIndex(int startSheetIndex, Integer colNumber) throws IOException {
-        return this.buildHtmlWithStartAndEndIndex(startSheetIndex, this.workbook.getNumberOfSheets() - 1, colNumber);
-    }
-
+    /**
+     * 构建 html
+     *
+     * @param sheet sheet
+     * @return html 结果
+     * @throws IOException
+     */
     public HtmlPage buildHtml(Sheet sheet) throws IOException {
-        return this.buildHtml(sheet, null);
+        return this.buildHtml(sheet, null, null, null, null);
     }
 
-    public HtmlPage buildHtml(int sheetIndex) throws IOException {
-        return this.buildHtml(sheetIndex, null);
+    /**
+     * 构建 html
+     *
+     * @param sheetIndex sheet 下标
+     * @return html 结果
+     * @throws IOException
+     */
+    public HtmlPage buildHtmlWidthSheetIndex(int sheetIndex) throws IOException {
+        return this.buildHtmlWidthSheetIndex(sheetIndex, null, null, null, null);
     }
 
-    public List<HtmlPage> buildHtmlWithStartAndEndIndex(int startSheetIndex, int endSheetIndex) throws IOException {
-        return this.buildHtmlWithStartAndEndIndex(startSheetIndex, endSheetIndex, null);
+    /**
+     * 构建 html
+     *
+     * @param startSheetIndex sheet 开始下标
+     * @param endSheetIndex   sheet 结束下标
+     * @return html 结果
+     * @throws IOException
+     */
+    public List<HtmlPage> buildHtmlWidthSheetIndex(Integer startSheetIndex, Integer endSheetIndex) throws IOException {
+        return this.buildHtmlWidthSheetIndex(startSheetIndex, endSheetIndex, null, null, null, null);
     }
 
-    public List<HtmlPage> buildHtmlWithStartIndex(int startSheetIndex) throws IOException {
-        return this.buildHtmlWithStartIndex(startSheetIndex, null);
-    }
-
-    private HtmlPage doBuildHtml(Sheet sheet, int columnNum) {
+    private HtmlPage doBuildHtml(Sheet sheet, Integer startRowIndex, int endRowIndex, Integer startColIndex, int endColIndex) {
         HtmlPage htmlPage = getHtmlPage();
         HtmlElement div = new HtmlElement("div");
         div.addClass("exc-page");
@@ -250,10 +281,30 @@ public class Excel2Html {
         Map<String, Map<String, Object>> tagCellContainerStyleCompressCache = new HashMap<>();
         Map<String, Map<String, Object>> tagCellValStyleCompressCache = new HashMap<>();
 
+        // todo 按打印页转换
+
         // 单元格解析
-        for (Row row : sheet) {
+        float defaultRowHeightInPoints = sheet.getDefaultRowHeightInPoints();
+        int defaultColumnWidth = sheet.getDefaultColumnWidth();
+        for (int rowIndex = Optional.ofNullable(startRowIndex).orElse(0); rowIndex <= endRowIndex; rowIndex++) {
+            Row row = sheet.getRow(rowIndex);
             HtmlElement tr = new HtmlElement("tr");
-            for (int cellIndex = 0; cellIndex < columnNum; cellIndex++) {
+
+            Integer startCol = Optional.ofNullable(startColIndex).orElse(0);
+            if (Objects.isNull(row)) {
+                // 对于为空的行，添加默认的单元格
+                for (int cellIndex = startCol; cellIndex <= endColIndex; cellIndex++) {
+                    HtmlElement td = new HtmlElement("td");
+                    td.addStyle("height", UnitConverter.convert().convertPointsString(defaultRowHeightInPoints));
+                    td.addStyle("width", UnitConverter.convert().usePx().convertColumnWidthString(defaultColumnWidth));
+                    tr.addChildElement(td);
+                }
+
+                table.addChildElement(tr);
+                continue;
+            }
+
+            for (int cellIndex = startCol; cellIndex <= endColIndex; cellIndex++) {
                 Cell cell = row.getCell(cellIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
                 ParserdCellValue parserdCellValue = CellValueParser.parseCellValue(cell, this.embedFileMap);
                 String cellValue = parserdCellValue.getValue();

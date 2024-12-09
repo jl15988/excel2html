@@ -2,16 +2,15 @@ package com.jl15988.excel2html.parser;
 
 import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.html.HtmlElement;
-import org.apache.poi.ss.usermodel.ClientAnchor;
-import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.Shape;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.util.Units;
 import org.apache.poi.xssf.usermodel.XSSFAnchor;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFSimpleShape;
 
 import javax.imageio.ImageIO;
+import java.awt.Color;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -19,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 图形解析器
@@ -83,17 +83,24 @@ public class DrawingValueParser {
     public static double totalColumnWidth(int col1, int col2, Sheet sheet, UnitConverter dxUnitConverter) {
         double totalWidth = 0;
         for (int i = col1; i < col2; i++) {
-            totalWidth += UnitConverter.convert().setUsePx(dxUnitConverter.getUsePx()).convertCellPixels(sheet.getColumnWidthInPixels(i));
+            totalWidth += sheet.getColumnWidthInPixels(i);
         }
-        return totalWidth;
+        return UnitConverter.convert().setUsePx(dxUnitConverter.getUsePx()).convertCellPixels(totalWidth);
     }
 
     public static double totalRowHeight(int row1, int row2, Sheet sheet, UnitConverter dyUnitConverter) {
         double totalHeight = 0;
+        float defaultRowHeightInPoints = sheet.getDefaultRowHeightInPoints();
         for (int i = row1; i < row2; i++) {
-            totalHeight += UnitConverter.convert().setUsePx(dyUnitConverter.getUsePx()).convertPoints(sheet.getRow(i).getHeightInPoints());
+            Row row = sheet.getRow(i);
+            // 行可能为空，使用默认的行高
+            double height = defaultRowHeightInPoints;
+            if (Objects.nonNull(row)) {
+                height = row.getHeightInPoints();
+            }
+            totalHeight += height;
         }
-        return totalHeight;
+        return UnitConverter.convert().setUsePx(dyUnitConverter.getUsePx()).convertPoints(totalHeight);
     }
 
     private static void drawShape(XSSFSimpleShape simpleShape) {
