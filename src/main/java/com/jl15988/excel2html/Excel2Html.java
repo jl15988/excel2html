@@ -132,10 +132,10 @@ public class Excel2Html {
      * 构建 html
      *
      * @param sheet         sheet
-     * @param startRowIndex 开始行
-     * @param endRowIndex   结束行
-     * @param startColIndex 开始列
-     * @param endColIndex   结束列
+     * @param startRowIndex 开始行，可为空默认0
+     * @param endRowIndex   结束行，可为空默认最后
+     * @param startColIndex 开始列，可为空默认0
+     * @param endColIndex   结束列，可为空默认最后
      * @return html 结果
      * @throws IOException
      */
@@ -185,10 +185,10 @@ public class Excel2Html {
      * 构建 html
      *
      * @param sheetIndex    sheet 下标
-     * @param startRowIndex 开始行
-     * @param endRowIndex   结束行
-     * @param startColIndex 开始列
-     * @param endColIndex   结束列
+     * @param startRowIndex 开始行，可为空默认0
+     * @param endRowIndex   结束行，可为空默认最后
+     * @param startColIndex 开始列，可为空默认0
+     * @param endColIndex   结束列，可为空默认最后
      * @return html 结果
      * @throws IOException
      */
@@ -203,12 +203,12 @@ public class Excel2Html {
     /**
      * 构建 html
      *
-     * @param startSheetIndex sheet 开始下标
-     * @param endSheetIndex   sheet 结束下标
-     * @param startRowIndex   开始行
-     * @param endRowIndex     结束行
-     * @param startColIndex   开始列
-     * @param endColIndex     结束列
+     * @param startSheetIndex sheet 开始下标，可为空默认0
+     * @param endSheetIndex   sheet 结束下标，可为空默认最后
+     * @param startRowIndex   开始行，可为空默认0
+     * @param endRowIndex     结束行，可为空默认最后
+     * @param startColIndex   开始列，可为空默认0
+     * @param endColIndex     结束列，可为空默认最后
      * @return html 结果
      * @throws IOException
      */
@@ -218,8 +218,8 @@ public class Excel2Html {
         }
         this.doLoadEmbedFile();
 
-        int endIndex = endSheetIndex;
         int numberOfSheets = this.workbook.getNumberOfSheets();
+        int endIndex = Optional.ofNullable(endSheetIndex).orElse(numberOfSheets - 1);
         if (endIndex > numberOfSheets - 1) {
             endIndex = numberOfSheets - 1;
         }
@@ -258,8 +258,8 @@ public class Excel2Html {
     /**
      * 构建 html
      *
-     * @param startSheetIndex sheet 开始下标
-     * @param endSheetIndex   sheet 结束下标
+     * @param startSheetIndex sheet 开始下标，可为空默认0
+     * @param endSheetIndex   sheet 结束下标，可为空默认最后
      * @return html 结果
      * @throws IOException
      */
