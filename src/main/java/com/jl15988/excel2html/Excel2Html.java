@@ -204,7 +204,7 @@ public class Excel2Html {
     }
 
     /**
-     * 构建 html
+     * 通过 sheet 索引构建 html
      *
      * @param sheetIndex    sheet 下标
      * @param startRowIndex 开始行，可为空默认0
@@ -214,7 +214,7 @@ public class Excel2Html {
      * @return html 结果
      * @throws IOException
      */
-    public HtmlPage buildHtmlWidthSheetIndex(int sheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex) throws IOException {
+    public HtmlPage buildHtmlWithSheetIndex(int sheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex) throws IOException {
         if (this.workbook == null) {
             return null;
         }
@@ -223,7 +223,7 @@ public class Excel2Html {
     }
 
     /**
-     * 构建 html
+     * 通过 sheet 索引构建 html
      *
      * @param startSheetIndex sheet 开始下标，可为空默认0
      * @param endSheetIndex   sheet 结束下标，可为空默认最后
@@ -234,7 +234,7 @@ public class Excel2Html {
      * @return html 结果
      * @throws IOException
      */
-    public List<HtmlPage> buildHtmlWidthSheetIndex(Integer startSheetIndex, Integer endSheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex) throws IOException {
+    public List<HtmlPage> buildHtmlWithSheetIndex(Integer startSheetIndex, Integer endSheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex) throws IOException {
         if (this.workbook == null) {
             return null;
         }
@@ -249,7 +249,7 @@ public class Excel2Html {
         List<HtmlPage> htmlList = new ArrayList<>();
 
         for (int i = Optional.ofNullable(startSheetIndex).orElse(0); i <= endIndex; i++) {
-            HtmlPage htmlPage = this.buildHtmlWidthSheetIndex(i, startRowIndex, endRowIndex, startColIndex, endColIndex);
+            HtmlPage htmlPage = this.buildHtmlWithSheetIndex(i, startRowIndex, endRowIndex, startColIndex, endColIndex);
             htmlList.add(htmlPage);
         }
         return htmlList;
@@ -267,26 +267,26 @@ public class Excel2Html {
     }
 
     /**
-     * 构建 html
+     * 通过 sheet 索引构建 html
      *
      * @param sheetIndex sheet 下标
      * @return html 结果
      * @throws IOException
      */
-    public HtmlPage buildHtmlWidthSheetIndex(int sheetIndex) throws IOException {
-        return this.buildHtmlWidthSheetIndex(sheetIndex, null, null, null, null);
+    public HtmlPage buildHtmlWithSheetIndex(int sheetIndex) throws IOException {
+        return this.buildHtmlWithSheetIndex(sheetIndex, null, null, null, null);
     }
 
     /**
-     * 构建 html
+     * 通过 sheet 索引构建 html
      *
      * @param startSheetIndex sheet 开始下标，可为空默认0
      * @param endSheetIndex   sheet 结束下标，可为空默认最后
      * @return html 结果
      * @throws IOException
      */
-    public List<HtmlPage> buildHtmlWidthSheetIndex(Integer startSheetIndex, Integer endSheetIndex) throws IOException {
-        return this.buildHtmlWidthSheetIndex(startSheetIndex, endSheetIndex, null, null, null, null);
+    public List<HtmlPage> buildHtmlWithSheetIndex(Integer startSheetIndex, Integer endSheetIndex) throws IOException {
+        return this.buildHtmlWithSheetIndex(startSheetIndex, endSheetIndex, null, null, null, null);
     }
 
     private HtmlPage doBuildHtml(Sheet sheet, Integer startRowIndex, int endRowIndex, Integer startColIndex, int endColIndex) {
