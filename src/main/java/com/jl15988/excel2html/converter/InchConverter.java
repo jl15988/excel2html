@@ -39,4 +39,14 @@ public class InchConverter {
     public static double toMM(double inch) {
         return inch * 25.4;
     }
+
+    /**
+     * 英寸转EMU
+     *
+     * @param inch 英寸
+     * @return EMU
+     */
+    public static double toEmu(double inch) {
+        return inch / UnitConstant.EMU_PER_INCH;
+    }
 }

@@ -38,4 +38,14 @@ public class MillimetreConverter {
     public static double toInch(double mm, int dpi) {
         return mm / 25.4;
     }
+
+    /**
+     * 毫米转EMU
+     *
+     * @param mm 毫米
+     * @return EMU
+     */
+    public static double toEmu(double mm) {
+        return mm / UnitConstant.EMU_PER_CENTIMETER / 10;
+    }
 }

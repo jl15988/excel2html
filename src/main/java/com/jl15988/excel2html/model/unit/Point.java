@@ -1,8 +1,10 @@
 package com.jl15988.excel2html.model.unit;
 
+import com.jl15988.excel2html.converter.EmuConverter;
 import com.jl15988.excel2html.converter.InchConverter;
 import com.jl15988.excel2html.converter.MillimetreConverter;
 import com.jl15988.excel2html.converter.PixelConverter;
+import com.jl15988.excel2html.converter.UnitConstant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,9 +24,9 @@ public class Point {
 
     private double value;
 
-    private int dpi = 96;
+    private int dpi = UnitConstant.DEFAULT_DPI;
 
-    private final String unit = "pt";
+    private final String unit = UnitConstant.POINT_UNIT;
 
     public Point(double value) {
         this.value = value;
@@ -42,6 +44,10 @@ public class Point {
         return Inch.formPoint(this);
     }
 
+    public Emu toEmu() {
+        return Emu.formPoint(this);
+    }
+
     public static Point fromPixel(Pixel pixel) {
         return new Point(PixelConverter.toPoint(pixel.getValue(), pixel.getDpi()), pixel.getDpi());
     }
@@ -52,6 +58,10 @@ public class Point {
 
     public static Point fromInch(Inch inch) {
         return new Point(InchConverter.toPoint(inch.getValue()), inch.getDpi());
+    }
+
+    public static Point formEmu(Emu emu) {
+        return new Point(EmuConverter.toPoint(emu.getValue()), emu.getDpi());
     }
 
     public String toString() {

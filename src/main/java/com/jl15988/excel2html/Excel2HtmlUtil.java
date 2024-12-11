@@ -1,9 +1,13 @@
 package com.jl15988.excel2html;
 
 import com.jl15988.excel2html.converter.FontSizeConverter;
-import com.jl15988.excel2html.converter.UnitConverter;
+import com.jl15988.excel2html.model.unit.Inch;
+import com.jl15988.excel2html.model.unit.Millimetre;
 import com.jl15988.excel2html.parser.CellEmbedFileParser;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFPrintSetup;
 
@@ -69,8 +73,8 @@ public class Excel2HtmlUtil {
         XSSFPrintSetup printSetup = (XSSFPrintSetup) sheet.getPrintSetup();
         double topMargin = printSetup.getTopMargin();
         double bottomMargin = printSetup.getBottomMargin();
-        double totalMargin = UnitConverter.convert().convertInchToPoints(topMargin + bottomMargin);
-        double A4_height = UnitConverter.convert().convertCMToPoints(29.7);
+        double totalMargin = new Inch(topMargin + bottomMargin).toPoint().getValue();
+        double A4_height = new Millimetre(297).toPoint().getValue();
 //        double thresholdValue = 18;
 //        double thresholdValue = 15;
         double thresholdValue = 0;
@@ -148,12 +152,11 @@ public class Excel2HtmlUtil {
     /**
      * 获取像素列宽
      *
-     * @param cell 单元格
+     * @param sheet       sheet
+     * @param columnIndex 列
      */
-    public static int getColumnWidthInPixels(Cell cell) {
-        double defaultFontPixelSize = Excel2HtmlUtil.getDefaultFontPixelSize(cell.getSheet().getWorkbook());
-        int columnIndex = cell.getColumnIndex();
-        Sheet sheet = cell.getRow().getSheet();
+    public static int getColumnWidthInPixels(Sheet sheet, int columnIndex) {
+        double defaultFontPixelSize = Excel2HtmlUtil.getDefaultFontPixelSize(sheet.getWorkbook());
         int columnWidth = sheet.getColumnWidth(columnIndex);
         if (columnWidth < 0) {
             return (int) Math.ceil(((double) (-columnWidth / 10000) / 256 * defaultFontPixelSize));

@@ -1,8 +1,10 @@
 package com.jl15988.excel2html.model.unit;
 
+import com.jl15988.excel2html.converter.EmuConverter;
 import com.jl15988.excel2html.converter.InchConverter;
 import com.jl15988.excel2html.converter.PixelConverter;
 import com.jl15988.excel2html.converter.PointConverter;
+import com.jl15988.excel2html.converter.UnitConstant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,9 +24,9 @@ public class Millimetre {
 
     private double value;
 
-    private int dpi = 96;
+    private int dpi = UnitConstant.DEFAULT_DPI;
 
-    private final String unit = "mm";
+    private final String unit = UnitConstant.MILLIMETRE_UNIT;
 
     public Millimetre(double value) {
         this.value = value;
@@ -42,6 +44,10 @@ public class Millimetre {
         return Inch.formMillimetre(this);
     }
 
+    public Emu toEmu() {
+        return Emu.formMillimetre(this);
+    }
+
     public static Millimetre formPixel(Pixel pixel) {
         return new Millimetre(PixelConverter.toMM(pixel.getValue(), pixel.getDpi()), pixel.getDpi());
     }
@@ -52,6 +58,10 @@ public class Millimetre {
 
     public static Millimetre formInch(Inch inch) {
         return new Millimetre(InchConverter.toMM(inch.getValue()), inch.getDpi());
+    }
+
+    public static Millimetre formEmu(Emu emu) {
+        return new Millimetre(EmuConverter.toMM(emu.getValue()), emu.getDpi());
     }
 
     public String toString() {

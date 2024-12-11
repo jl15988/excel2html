@@ -1,5 +1,6 @@
 package com.jl15988.excel2html;
 
+import com.jl15988.excel2html.converter.UnitConstant;
 import com.jl15988.excel2html.converter.style.StyleConverter;
 import com.jl15988.excel2html.converter.style.StyleGroupHtml;
 import com.jl15988.excel2html.enums.ParserdCellValueType;
@@ -43,7 +44,7 @@ public class Excel2Html {
     /**
      * dpi
      */
-    private int dpi = 96;
+    private int dpi = UnitConstant.DEFAULT_DPI;
 
     /**
      * 文件数据
@@ -436,7 +437,7 @@ public class Excel2Html {
         div.addChildElement(table);
         htmlPage.addElement(div);
         // 添加图片图形解析结果
-        htmlPage.addElements(DrawingValueParser.parserDrawing(sheet));
+        htmlPage.addElements(DrawingValueParser.parserDrawing(sheet, this.dpi));
         if (this.isCompressStyle) {
             // 添加通用样式
             htmlPage.addStyleContent(new CommonCss().toHtmlString());

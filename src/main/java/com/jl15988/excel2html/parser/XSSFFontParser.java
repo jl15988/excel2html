@@ -1,8 +1,8 @@
 package com.jl15988.excel2html.parser;
 
 import com.jl15988.excel2html.converter.ColorConverter;
-import com.jl15988.excel2html.converter.PixelConverter;
 import com.jl15988.excel2html.model.style.FontICssStyle;
+import com.jl15988.excel2html.model.unit.Point;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -39,7 +39,7 @@ public class XSSFFontParser {
                 .set(isStrikeout, "text-decoration", "line-through")
                 .set(isUnderline, "text-decoration", "underline")
                 .set("font-family", fontName)
-                .set("font-size", PixelConverter.pointsToPxString(fontHeightInPoints))
+                .set("font-size", new Point(fontHeightInPoints).toString())
                 .setIfExists("color", rgba);
 
         return fontCssStyle;

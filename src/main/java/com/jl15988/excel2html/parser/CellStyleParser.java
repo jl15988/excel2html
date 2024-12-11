@@ -2,18 +2,29 @@ package com.jl15988.excel2html.parser;
 
 import com.jl15988.excel2html.Excel2HtmlUtil;
 import com.jl15988.excel2html.converter.ColorConverter;
-import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.model.parser.ParserdStyle;
 import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
 import com.jl15988.excel2html.model.unit.Pixel;
 import com.jl15988.excel2html.model.unit.Point;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
  * 单元格样式解析器
@@ -350,7 +361,7 @@ public class CellStyleParser {
         parserdStyleResult.cellContainerStyle.put("min-height", cellHeightC);
         parserdStyleResult.cellStyle.put("height", cellHeight);
         // 列宽
-        double columnWidthInPixels = Excel2HtmlUtil.getColumnWidthInPixels(cell);
+        double columnWidthInPixels = Excel2HtmlUtil.getColumnWidthInPixels(cell.getSheet(), cell.getColumnIndex());
         String cellWidth = new Pixel(columnWidthInPixels, dpi).toString();
         parserdStyleResult.cellStyle.put("width", cellWidth);
         parserdStyleResult.cellStyle.put("max-width", cellWidth);
@@ -394,7 +405,7 @@ public class CellStyleParser {
         }
         // 大小
         short fontHeightInPoints = fontAt.getFontHeightInPoints();
-        parserdStyleResult.cellContainerStyle.put("font-size", UnitConverter.convert().convertPointsString(fontHeightInPoints));
+        parserdStyleResult.cellContainerStyle.put("font-size", new Point(fontHeightInPoints).toString());
         // 斜体
         if (fontAt.getItalic()) {
             parserdStyleResult.cellContainerStyle.put("font-style", "italic");

@@ -1,16 +1,21 @@
 package com.jl15988.excel2html.parser;
 
-import com.jl15988.excel2html.converter.UnitConverter;
+import com.jl15988.excel2html.Excel2HtmlUtil;
+import com.jl15988.excel2html.converter.UnitConstant;
 import com.jl15988.excel2html.html.HtmlElement;
+import com.jl15988.excel2html.model.unit.Emu;
+import com.jl15988.excel2html.model.unit.Point;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Shape;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.util.Units;
 import org.apache.poi.xssf.usermodel.XSSFAnchor;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFSimpleShape;
 
 import javax.imageio.ImageIO;
-import java.awt.Color;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -35,7 +40,7 @@ public class DrawingValueParser {
      *
      * @param sheet 表格 sheet
      */
-    public static List<HtmlElement> parserDrawing(Sheet sheet) {
+    public static List<HtmlElement> parserDrawing(Sheet sheet, int dpi) {
         List<HtmlElement> htmlElementList = new ArrayList<>();
         // 获取形状，包含图片
         Drawing<?> drawingPatriarch = sheet.getDrawingPatriarch();
@@ -52,24 +57,21 @@ public class DrawingValueParser {
                     int col2 = anchor.getCol2();
                     int row2 = anchor.getRow2();
 
-                    UnitConverter dxUnitConverter = UnitConverter.convert().usePx();
-                    UnitConverter dyUnitConverter = UnitConverter.convert().usePx();
-
                     // 获取锚点在所在单元格的坐标
-                    double dx1 = dxUnitConverter.convertEmus(anchor.getDx1());
-                    double dy1 = dyUnitConverter.convertEmus(anchor.getDy1());
-                    double dx2 = dxUnitConverter.convertEmus(anchor.getDx2());
-                    double dy2 = dyUnitConverter.convertEmus(anchor.getDy2());
+                    double dx1 = new Emu(anchor.getDx1(), dpi).toPixel().getValue();
+                    double dy1 = new Emu(anchor.getDy1(), dpi).toPixel().getValue();
+                    double dx2 = new Emu(anchor.getDx2(), dpi).toPixel().getValue();
+                    double dy2 = new Emu(anchor.getDy2(), dpi).toPixel().getValue();
 
                     byte[] imageBytes = pictureShape.getPictureData().getData();
                     String base64Image = "data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes);
 
                     HtmlElement img = new HtmlElement("img");
                     img.addAttribute("src", base64Image);
-                    img.addStyle("width", totalColumnWidth(col1, col2, sheet, dxUnitConverter) + (dx2 - dx1) + dxUnitConverter.getUnit());
-                    img.addStyle("height", totalRowHeight(row1, row2, sheet, dyUnitConverter) + (dy2 - dy1) + dyUnitConverter.getUnit());
-                    img.addStyle("top", totalRowHeight(0, row1, sheet, dyUnitConverter) + dy1 + dyUnitConverter.getUnit());
-                    img.addStyle("left", totalColumnWidth(0, col1, sheet, dxUnitConverter) + dx1 + dxUnitConverter.getUnit());
+                    img.addStyle("width", totalColumnWidth(col1, col2, sheet) + (dx2 - dx1) + UnitConstant.PIXEL_UNIT);
+                    img.addStyle("height", totalRowHeight(row1, row2, sheet) + (dy2 - dy1) + UnitConstant.PIXEL_UNIT);
+                    img.addStyle("top", totalRowHeight(0, row1, sheet) + dy1 + UnitConstant.PIXEL_UNIT);
+                    img.addStyle("left", totalColumnWidth(0, col1, sheet) + dx1 + UnitConstant.PIXEL_UNIT);
                     img.addStyle("position", "absolute");
                     htmlElementList.add(img);
                 } else if (patriarch instanceof XSSFSimpleShape) {
@@ -80,15 +82,16 @@ public class DrawingValueParser {
         return htmlElementList;
     }
 
-    public static double totalColumnWidth(int col1, int col2, Sheet sheet, UnitConverter dxUnitConverter) {
+    public static double totalColumnWidth(int col1, int col2, Sheet sheet) {
         double totalWidth = 0;
         for (int i = col1; i < col2; i++) {
-            totalWidth += sheet.getColumnWidthInPixels(i);
+            int columnWidthInPixels = Excel2HtmlUtil.getColumnWidthInPixels(sheet, i);
+            totalWidth += columnWidthInPixels;
         }
-        return UnitConverter.convert().setUsePx(dxUnitConverter.getUsePx()).convertCellPixels(totalWidth);
+        return totalWidth;
     }
 
-    public static double totalRowHeight(int row1, int row2, Sheet sheet, UnitConverter dyUnitConverter) {
+    public static double totalRowHeight(int row1, int row2, Sheet sheet) {
         double totalHeight = 0;
         float defaultRowHeightInPoints = sheet.getDefaultRowHeightInPoints();
         for (int i = row1; i < row2; i++) {
@@ -100,7 +103,7 @@ public class DrawingValueParser {
             }
             totalHeight += height;
         }
-        return UnitConverter.convert().setUsePx(dyUnitConverter.getUsePx()).convertPoints(totalHeight);
+        return new Point(totalHeight).toPixel().getValue();
     }
 
     private static void drawShape(XSSFSimpleShape simpleShape) {

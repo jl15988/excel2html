@@ -42,4 +42,15 @@ public class PointConverter {
     public static double toInch(double points) {
         return points / 72;
     }
+
+    /**
+     * 磅转EMU
+     *
+     * @param points 磅
+     * @return EMU
+     */
+    public static double toEmu(double points) {
+        double inch = toInch(points);
+        return InchConverter.toEmu(inch);
+    }
 }
