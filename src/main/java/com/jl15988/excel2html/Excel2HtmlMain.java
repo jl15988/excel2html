@@ -3,6 +3,10 @@ package com.jl15988.excel2html;
 import com.jl15988.excel2html.utils.FileUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.awt.*;
+import java.awt.font.FontRenderContext;
+import java.awt.font.GlyphVector;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -35,9 +39,8 @@ public class Excel2HtmlMain {
             assert fileData != null;
             FileOutputStream fos = new FileOutputStream(htmlFilePath);
 
-            XSSFWorkbook sheets = new XSSFWorkbook(new ByteArrayInputStream(fileData));
-
-            String htmlString = Excel2HtmlHelper.toHtml(sheets.getSheetAt(0)).toHtmlString();
+            XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(fileData));
+            String htmlString = Excel2HtmlHelper.toHtml(workbook.getSheetAt(0)).toHtmlString();
 
 //            Excel2Html excel2Html = new Excel2Html(new File(excelFilePath));
 //            String htmlString = excel2Html.buildHtml(0).toHtmlString();

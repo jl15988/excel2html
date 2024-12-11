@@ -1,6 +1,5 @@
 package com.jl15988.excel2html;
 
-import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.converter.style.StyleConverter;
 import com.jl15988.excel2html.converter.style.StyleGroupHtml;
 import com.jl15988.excel2html.enums.ParserdCellValueType;
@@ -15,6 +14,8 @@ import com.jl15988.excel2html.html.IHtmlElement;
 import com.jl15988.excel2html.model.parser.ParserdCellValue;
 import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
+import com.jl15988.excel2html.model.unit.Pixel;
+import com.jl15988.excel2html.model.unit.Point;
 import com.jl15988.excel2html.parser.CellStyleParser;
 import com.jl15988.excel2html.parser.CellValueParser;
 import com.jl15988.excel2html.parser.DrawingValueParser;
@@ -38,6 +39,11 @@ import java.util.*;
  * @since 2024/12/4 9:13
  **/
 public class Excel2Html {
+
+    /**
+     * dpi
+     */
+    private int dpi = 96;
 
     /**
      * 文件数据
@@ -107,6 +113,11 @@ public class Excel2Html {
     public Excel2Html() {
         this.sheetToHtmlMap = new HashMap<>();
         this.cellValueFormater = new DefaultCellValueFormatter();
+    }
+
+    public Excel2Html setDpi(int dpi) {
+        this.dpi = dpi;
+        return this;
     }
 
     public Excel2Html setCompressStyle(boolean compressStyle) {
@@ -290,11 +301,17 @@ public class Excel2Html {
     }
 
     private HtmlPage doBuildHtml(Sheet sheet, Integer startRowIndex, int endRowIndex, Integer startColIndex, int endColIndex) {
+        // 赋值默认列宽
+        sheet.setDefaultColumnWidth(Excel2HtmlUtil.getDefaultColumnWidthSpecial(workbook));
+
         HtmlPage htmlPage = getHtmlPage();
         HtmlElement div = new HtmlElement("div");
         div.addClass("exc-page");
 
         HtmlElement table = new HtmlElement("table");
+        table.addAttribute("border", "0");
+        table.addAttribute("cellpadding", "0");
+        table.addAttribute("cellspacing", "0");
         // 获取合并的单元格
         List<CellRangeAddress> mergedRegions = sheet.getMergedRegions();
 
@@ -307,7 +324,7 @@ public class Excel2Html {
 
         // 单元格解析
         float defaultRowHeightInPoints = sheet.getDefaultRowHeightInPoints();
-        int defaultColumnWidth = sheet.getDefaultColumnWidth();
+        int defaultColumnWidthInPixels = Excel2HtmlUtil.getDefaultColumnWidthInPixels(workbook);
         for (int rowIndex = Optional.ofNullable(startRowIndex).orElse(0); rowIndex <= endRowIndex; rowIndex++) {
             Row row = sheet.getRow(rowIndex);
             HtmlElement tr = new HtmlElement("tr");
@@ -317,8 +334,8 @@ public class Excel2Html {
                 // 对于为空的行，添加默认的单元格
                 for (int cellIndex = startCol; cellIndex <= endColIndex; cellIndex++) {
                     HtmlElement td = new HtmlElement("td");
-                    td.addStyle("height", UnitConverter.convert().convertPointsString(defaultRowHeightInPoints));
-                    td.addStyle("width", UnitConverter.convert().usePx().convertColumnWidthString(defaultColumnWidth));
+                    td.addStyle("height", new Point(defaultRowHeightInPoints, this.dpi).toString());
+                    td.addStyle("width", new Pixel(defaultColumnWidthInPixels, this.dpi).toString());
                     tr.addChildElement(td);
                 }
 
@@ -348,7 +365,7 @@ public class Excel2Html {
                 }
 
                 // 解析单元格样式
-                ParserdStyleResult parserdStyleResult = CellStyleParser.parserCellStyle(cell);
+                ParserdStyleResult parserdStyleResult = CellStyleParser.parserCellStyle(cell, this.dpi);
                 td.addClasses(parserdStyleResult.getCellClassList());
 
                 // 解析合并单元格
@@ -432,7 +449,7 @@ public class Excel2Html {
     /**
      * 解析合并单元格
      */
-    private static void parserMergedCell(List<CellRangeAddress> mergedRegions, Cell cell, HtmlElement td, ParserdStyleResult parserdStyleResult) {
+    private void parserMergedCell(List<CellRangeAddress> mergedRegions, Cell cell, HtmlElement td, ParserdStyleResult parserdStyleResult) {
         // 判断是否合并单元格，添加合并单元格属性
         Sheet sheet = cell.getRow().getSheet();
         CellRangeAddress cellAddresses = mergedRegions.stream().filter(address -> address.isInRange(cell)).findFirst().orElse(null);
@@ -457,7 +474,7 @@ public class Excel2Html {
                 if (Objects.nonNull(lastRow)) {
                     Cell lastColumnLastRowCell = lastRow.getCell(lastColumnIndex);
                     if (Objects.nonNull(lastColumnLastRowCell)) {
-                        ParserdStyleResult mergedParserdStyleResult = CellStyleParser.parserCellStyle(lastColumnLastRowCell);
+                        ParserdStyleResult mergedParserdStyleResult = CellStyleParser.parserCellStyle(lastColumnLastRowCell, this.dpi);
 
                         mergedParserdStyleResult.getCellStyle().forEach((name, value) -> {
                             if (parserdStyleResult.hasCellStyle(name)) {
@@ -479,10 +496,12 @@ public class Excel2Html {
                         totalHeight += rowItem.getHeightInPoints();
                     }
                 }
-                String mergedTotalHeight = UnitConverter.convert().convertPointsString(totalHeight);
-                parserdStyleResult.addCellContainerStyle("height", mergedTotalHeight);
-                parserdStyleResult.addCellContainerStyle("max-height", mergedTotalHeight);
-                parserdStyleResult.addCellContainerStyle("min-height", mergedTotalHeight);
+                String mergedTotalHeightC = new Point(totalHeight - new Pixel(3, dpi).toPoint().getValue(), this.dpi).toString();
+                String mergedTotalHeight = new Point(totalHeight, this.dpi).toString();
+                parserdStyleResult.addCellContainerStyle("height", mergedTotalHeightC);
+                parserdStyleResult.addCellContainerStyle("max-height", mergedTotalHeightC);
+                parserdStyleResult.addCellContainerStyle("min-height", mergedTotalHeightC);
+                parserdStyleResult.addCellStyle("height", mergedTotalHeight);
             } else {
                 td.addClass("merged-display-cell");
                 // 忽略被合并的单元格
@@ -492,7 +511,7 @@ public class Excel2Html {
         }
     }
 
-    private static HtmlPage getHtmlPage() {
+    private HtmlPage getHtmlPage() {
         HtmlPage htmlPage = new HtmlPage();
         htmlPage.setLang("zh-CN");
         htmlPage.addMeta(HtmlMeta
@@ -517,6 +536,29 @@ public class Excel2Html {
                         "}\n" +
                         "td {\n" +
                         "    overflow: visible;\n" +
+                        "    box-sizing: border-box;\n" +
+                        "    mso-style-parent: style0;\n" +
+                        "    padding-top: 1px;\n" +
+                        "    padding-right: 1px;\n" +
+                        "    padding-left: 1px;\n" +
+                        "    mso-ignore: padding;\n" +
+                        "    mso-number-format: \"General\";\n" +
+                        "    text-align: general;\n" +
+                        "    vertical-align: middle;\n" +
+                        "    white-space: nowrap;\n" +
+                        "    mso-rotate: 0;\n" +
+                        "    mso-pattern: auto;\n" +
+                        "    mso-background-source: auto;\n" +
+                        "    color: #000000;\n" +
+                        "    font-size: 11.0pt;\n" +
+                        "    font-weight: 400;\n" +
+                        "    font-style: normal;\n" +
+                        "    text-decoration: none;\n" +
+                        "    font-family: 宋体;\n" +
+                        "    mso-generic-font-family: auto;\n" +
+                        "    mso-font-charset: 134;\n" +
+                        "    border: none;\n" +
+                        "    mso-protection: locked visible;" +
                         "}\n" +
                         // 合并的单元格超出隐藏
                         ".exc-table-cell.merged-cell {\n" +
@@ -559,7 +601,7 @@ public class Excel2Html {
                         // 单元格内 value 容器
                         ".exc-table-val {\n" +
                         "    display: table-cell;\n" +
-                        "    padding-top: 2px;\n" +
+//                        "    padding-top: 2px;\n" +
                         "}" +
                         // 单元格内图片容器，为了还原嵌入图片样式
                         ".embed-img-container {\n" +
@@ -581,10 +623,10 @@ public class Excel2Html {
         return htmlPage;
     }
 
-    private static void setCompressStyle(HtmlPage htmlPage,
-                                         Map<String, Map<String, Object>> tagCellStyleCompressCache,
-                                         Map<String, Map<String, Object>> tagCellContainerStyleCompressCache,
-                                         Map<String, Map<String, Object>> tagCellValStyleCompressCache) {
+    private void setCompressStyle(HtmlPage htmlPage,
+                                  Map<String, Map<String, Object>> tagCellStyleCompressCache,
+                                  Map<String, Map<String, Object>> tagCellContainerStyleCompressCache,
+                                  Map<String, Map<String, Object>> tagCellValStyleCompressCache) {
         // 对 style 进行解析分组，转 class，压缩
         StyleGroupHtml cellStyleHtml = StyleConverter.tagStyleToHtmlString(tagCellStyleCompressCache);
         StyleGroupHtml cellContainerStyleHtml = StyleConverter.tagStyleToHtmlString(tagCellContainerStyleCompressCache);
@@ -612,7 +654,7 @@ public class Excel2Html {
      * @param htmlElement    元素
      * @param tagStyleUidMap 元素-样式id
      */
-    private static void addTagStyleClass(IHtmlElement<?> htmlElement, Map<String, List<String>> tagStyleUidMap) {
+    private void addTagStyleClass(IHtmlElement<?> htmlElement, Map<String, List<String>> tagStyleUidMap) {
         if (null == tagStyleUidMap || tagStyleUidMap.isEmpty()) return;
         List<IHtmlElement<?>> childrenElementList = htmlElement.getChildrenElementList();
         if (null != childrenElementList && !childrenElementList.isEmpty()) {

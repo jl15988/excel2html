@@ -1,10 +1,13 @@
 package com.jl15988.excel2html.parser;
 
+import com.jl15988.excel2html.Excel2HtmlUtil;
 import com.jl15988.excel2html.converter.ColorConverter;
 import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.model.parser.ParserdStyle;
 import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
+import com.jl15988.excel2html.model.unit.Pixel;
+import com.jl15988.excel2html.model.unit.Point;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
@@ -284,10 +287,10 @@ public class CellStyleParser {
                 styleMap.put(borderStyleName, "1px dotted " + borderColor);
                 break;
             case THICK:
-                styleMap.put(borderStyleName, "3px solid " + borderColor);
+                styleMap.put(borderStyleName, "1.5pt solid " + borderColor);
                 break;
             case DOUBLE:
-                styleMap.put(borderStyleName, "3px double " + borderColor);
+                styleMap.put(borderStyleName, "1.5pt double " + borderColor);
                 break;
             case HAIR:
                 // todo 极细处理
@@ -329,7 +332,7 @@ public class CellStyleParser {
         return styleMap;
     }
 
-    public static ParserdStyleResult parserCellStyle(Cell cell) {
+    public static ParserdStyleResult parserCellStyle(Cell cell, int dpi) {
         ParserdStyleResult parserdStyleResult = new ParserdStyleResult();
 
         Row row = cell.getRow();
@@ -340,14 +343,15 @@ public class CellStyleParser {
 
         // 行高
         float heightInPoints = row.getHeightInPoints();
-        String cellHeight = UnitConverter.convert().convertPointsString(heightInPoints);
-        parserdStyleResult.cellContainerStyle.put("height", cellHeight);
-        parserdStyleResult.cellContainerStyle.put("max-height", cellHeight);
-        parserdStyleResult.cellContainerStyle.put("min-height", cellHeight);
+        String cellHeightC = new Point(heightInPoints - new Pixel(3, dpi).toPoint().getValue(), dpi).toString();
+        String cellHeight = new Point(heightInPoints, dpi).toString();
+        parserdStyleResult.cellContainerStyle.put("height", cellHeightC);
+        parserdStyleResult.cellContainerStyle.put("max-height", cellHeightC);
+        parserdStyleResult.cellContainerStyle.put("min-height", cellHeightC);
+        parserdStyleResult.cellStyle.put("height", cellHeight);
         // 列宽
-        int columnIndex = cell.getColumnIndex();
-        float columnWidthInPixels = sheet.getColumnWidthInPixels(columnIndex);
-        String cellWidth = UnitConverter.convert().usePx().convertCellPixelsString(columnWidthInPixels);
+        double columnWidthInPixels = Excel2HtmlUtil.getColumnWidthInPixels(cell);
+        String cellWidth = new Pixel(columnWidthInPixels, dpi).toString();
         parserdStyleResult.cellStyle.put("width", cellWidth);
         parserdStyleResult.cellStyle.put("max-width", cellWidth);
         parserdStyleResult.cellStyle.put("min-width", cellWidth);

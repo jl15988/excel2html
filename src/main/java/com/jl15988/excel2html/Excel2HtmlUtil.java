@@ -1,9 +1,9 @@
 package com.jl15988.excel2html;
 
+import com.jl15988.excel2html.converter.FontSizeConverter;
 import com.jl15988.excel2html.converter.UnitConverter;
 import com.jl15988.excel2html.parser.CellEmbedFileParser;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFPrintSetup;
 
@@ -95,5 +95,85 @@ public class Excel2HtmlUtil {
         }
 
         return currentRowNum;
+    }
+
+    /**
+     * 获取工作簿默认字体像素大小
+     *
+     * @param workbook 工作簿
+     */
+    public static double getDefaultFontPixelSize(Workbook workbook) {
+        Font defaultWorkbookFont = Excel2HtmlUtil.getDefaultWorkbookFont(workbook);
+        return FontSizeConverter.getPixelSize(defaultWorkbookFont.getFontName(), defaultWorkbookFont.getFontHeightInPoints());
+    }
+
+    /**
+     * 获取默认像素列宽
+     *
+     * @param workbook 工作簿
+     */
+    public static int getDefaultColumnWidthInPixels(Workbook workbook) {
+        double defaultColumnCharWidth = 8;
+        double dfw = getDefaultFontPixelSize(workbook);
+        // 两边的内边距
+        int padding = (int) Math.ceil((double) dfw / 4);
+        // 网格线宽度
+        double lineWidth = 1.0;
+        // 计算列宽
+        double columnWidth = defaultColumnCharWidth * dfw + padding * 2 + lineWidth;
+        // 最终向上取8的整数倍数（Excel规定每列的像素宽度必须是8的整数倍（为了在滚动时提高渲染性能））
+        return (int) Math.ceil(columnWidth / 8.0) * 8;
+    }
+
+    /**
+     * 获取默认字符列宽
+     *
+     * @param workbook 工作簿
+     */
+    public static int getDefaultColumnWidth(Workbook workbook) {
+        double defaultFontPixelSize = Excel2HtmlUtil.getDefaultFontPixelSize(workbook);
+        return (int) Math.ceil(getDefaultColumnWidthInPixels(workbook) / defaultFontPixelSize);
+    }
+
+    /**
+     * 获取默认字符列宽，获取的为负数，且扩大 10000 倍的，用于标识和保留小数
+     *
+     * @param workbook 工作簿
+     */
+    public static int getDefaultColumnWidthSpecial(Workbook workbook) {
+        double defaultFontPixelSize = Excel2HtmlUtil.getDefaultFontPixelSize(workbook);
+        return -(int) Math.ceil(getDefaultColumnWidthInPixels(workbook) / defaultFontPixelSize * 10000);
+    }
+
+    /**
+     * 获取像素列宽
+     *
+     * @param cell 单元格
+     */
+    public static int getColumnWidthInPixels(Cell cell) {
+        double defaultFontPixelSize = Excel2HtmlUtil.getDefaultFontPixelSize(cell.getSheet().getWorkbook());
+        int columnIndex = cell.getColumnIndex();
+        Sheet sheet = cell.getRow().getSheet();
+        int columnWidth = sheet.getColumnWidth(columnIndex);
+        if (columnWidth < 0) {
+            return (int) Math.ceil(((double) (-columnWidth / 10000) / 256 * defaultFontPixelSize));
+        }
+        return (int) ((double) columnWidth / 256 * defaultFontPixelSize);
+    }
+
+    /**
+     * 获取工作簿默认的字体
+     *
+     * @param workbook 工作簿
+     */
+    public static Font getDefaultWorkbookFont(Workbook workbook) {
+        int numberOfFonts = workbook.getNumberOfFonts();
+        if (numberOfFonts > 0) {
+            return workbook.getFontAt(0);
+        }
+        Font newFont = workbook.createFont();
+        newFont.setFontName("宋体");
+        newFont.setFontHeightInPoints((short) 11);
+        return newFont;
     }
 }
