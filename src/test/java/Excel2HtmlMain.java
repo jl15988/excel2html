@@ -1,12 +1,7 @@
-package com.jl15988.excel2html;
-
+import com.jl15988.excel2html.Excel2HtmlHelper;
 import com.jl15988.excel2html.utils.FileUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.awt.*;
-import java.awt.font.FontRenderContext;
-import java.awt.font.GlyphVector;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -22,15 +17,14 @@ public class Excel2HtmlMain {
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis();
 
-        // 获取当前类加载器
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        // 获取resources目录的URL地址
-        URL resource = classLoader.getResource("");
-        assert resource != null;
-        String resourcePath = resource.getPath().replace("target/classes/", "") + "src\\main\\resources\\";
+        String fileName = "测试记录表.xlsx";
+        String resultName = fileName.substring(0, fileName.lastIndexOf(".")) + ".html";
 
-        String excelFilePath = resourcePath + "测试记录表.xlsx";
-        String htmlFilePath = resourcePath + "test.html";
+        String userDir = System.getProperty("user.dir");
+        String testFileDir = userDir + "\\src\\test\\java\\resources\\";
+
+        String excelFilePath = testFileDir + fileName;
+        String htmlFilePath = testFileDir + resultName;
 
         try {
             FileInputStream fis = new FileInputStream(excelFilePath);

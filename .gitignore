@@ -39,5 +39,5 @@ build/
 
 .idea
 
-src/main/resources/*.html
-src/main/resources/~$*.xlsx
+src/test/java/resources/*.html
+src/test/java/resources/~$*.xlsx
