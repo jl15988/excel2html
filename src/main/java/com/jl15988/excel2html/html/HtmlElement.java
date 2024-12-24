@@ -1,5 +1,7 @@
 package com.jl15988.excel2html.html;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -15,6 +17,7 @@ public class HtmlElement implements IHtmlElement<HtmlElement> {
 
     private String id;
 
+    // 标签名称，为空时为纯文本
     private final String tagName;
 
     private final List<String> classList = new ArrayList<>();
@@ -30,6 +33,10 @@ public class HtmlElement implements IHtmlElement<HtmlElement> {
     public HtmlElement(String tagName) {
         this.tagName = tagName;
         this.uid = UUID.randomUUID().toString();
+    }
+
+    public HtmlElement() {
+        this(null);
     }
 
     @Override
@@ -175,6 +182,12 @@ public class HtmlElement implements IHtmlElement<HtmlElement> {
     }
 
     @Override
+    public HtmlElement addChildElements(List<IHtmlElement<?>> childList) {
+        childrenList.addAll(childList);
+        return this;
+    }
+
+    @Override
     public HtmlElement removeChild(IHtmlElement<?> child) {
         childrenList.remove(child);
         return this;
@@ -206,44 +219,55 @@ public class HtmlElement implements IHtmlElement<HtmlElement> {
     @Override
     public String toHtmlString() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("<").append(tagName);
-        if (id != null && !id.isEmpty()) {
-            stringBuilder.append(" ").append("id=\"").append(id).append("\"");
-        }
+        boolean hasTag = StringUtils.isNotBlank(tagName);
 
-        if (classList != null && !classList.isEmpty()) {
-            stringBuilder.append(" class=\"").append(String.join(" ", classList)).append("\"");
-        }
+        if (hasTag) {
+            stringBuilder.append("<").append(tagName);
+            if (id != null && !id.isEmpty()) {
+                stringBuilder.append(" ").append("id=\"").append(id).append("\"");
+            }
 
-        if (styleMap != null && !styleMap.isEmpty()) {
-            stringBuilder.append(" ").append("style=\"");
-            styleMap.forEach((name, value) -> {
-                stringBuilder.append(name).append(":").append(value).append(";");
-            });
-            stringBuilder.append("\"");
-        }
+            if (classList != null && !classList.isEmpty()) {
+                stringBuilder.append(" class=\"").append(String.join(" ", classList)).append("\"");
+            }
 
-        if (attrsMap != null && !attrsMap.isEmpty()) {
-            attrsMap.forEach((name, value) -> {
-                stringBuilder.append(" ").append(name).append("=\"").append(value).append("\"");
-            });
+            if (styleMap != null && !styleMap.isEmpty()) {
+                stringBuilder.append(" ").append("style=\"");
+                styleMap.forEach((name, value) -> {
+                    stringBuilder.append(name).append(":").append(value).append(";");
+                });
+                stringBuilder.append("\"");
+            }
+
+            if (attrsMap != null && !attrsMap.isEmpty()) {
+                attrsMap.forEach((name, value) -> {
+                    stringBuilder.append(" ").append(name).append("=\"").append(value).append("\"");
+                });
+            }
+            stringBuilder.append(">");
         }
-        stringBuilder.append(">");
 
         if (content != null) {
             stringBuilder.append(content);
         } else {
-            stringBuilder.append("\n");
             if (childrenList != null && !childrenList.isEmpty()) {
-                stringBuilder.append(childrenList.stream().map(IHtmlElement::toHtmlString).collect(Collectors.joining("\n")));
+                stringBuilder.append(childrenList.stream().map(IHtmlElement::toHtmlString).collect(Collectors.joining("")));
             }
         }
-        stringBuilder.append("</").append(tagName).append(">");
+
+        if (hasTag) {
+            stringBuilder.append("</").append(tagName).append(">");
+        }
+
         return stringBuilder.toString();
     }
 
     public static HtmlElementBuilder builder(String tagName) {
         return new HtmlElementBuilder(tagName);
+    }
+
+    public static HtmlElementBuilder builder() {
+        return new HtmlElementBuilder();
     }
 
     public static class HtmlElementBuilder {
@@ -252,6 +276,10 @@ public class HtmlElement implements IHtmlElement<HtmlElement> {
 
         public HtmlElementBuilder(String tagName) {
             this.htmlElement = new HtmlElement(tagName);
+        }
+
+        public HtmlElementBuilder() {
+            this.htmlElement = new HtmlElement();
         }
 
         public HtmlElementBuilder id(String id) {
@@ -301,6 +329,16 @@ public class HtmlElement implements IHtmlElement<HtmlElement> {
 
         public HtmlElementBuilder addChildElement(int index, IHtmlElement<?> child) {
             htmlElement.addChildElement(index, child);
+            return this;
+        }
+
+        public HtmlElementBuilder addChildElements(List<IHtmlElement<?>> childList) {
+            htmlElement.addChildElements(childList);
+            return this;
+        }
+
+        public HtmlElementBuilder addChildElements(IHtmlElement<?>... children) {
+            htmlElement.addChildElements(children);
             return this;
         }
 

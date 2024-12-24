@@ -4,7 +4,6 @@ import com.jl15988.excel2html.converter.UnitConstant;
 import com.jl15988.excel2html.converter.style.StyleConverter;
 import com.jl15988.excel2html.converter.style.StyleGroupHtml;
 import com.jl15988.excel2html.enums.ParserdCellValueType;
-import com.jl15988.excel2html.formatter.DefaultCellValueFormatter;
 import com.jl15988.excel2html.formatter.ICellValueFormater;
 import com.jl15988.excel2html.handler.ICellHandler;
 import com.jl15988.excel2html.handler.ITrElementHandler;
@@ -99,7 +98,6 @@ public class Excel2Html {
     public Excel2Html(byte[] fileData) throws IOException {
         this.fileData = fileData;
         this.sheetToHtmlMap = new HashMap<>();
-        this.cellValueFormater = new DefaultCellValueFormatter();
         this.workbook = new XSSFWorkbook(new ByteArrayInputStream(fileData));
     }
 
@@ -113,7 +111,6 @@ public class Excel2Html {
 
     public Excel2Html() {
         this.sheetToHtmlMap = new HashMap<>();
-        this.cellValueFormater = new DefaultCellValueFormatter();
     }
 
     public Excel2Html setDpi(int dpi) {

@@ -1,5 +1,6 @@
 package com.jl15988.excel2html.parser;
 
+import com.jl15988.excel2html.enums.CommonElementClass;
 import com.jl15988.excel2html.enums.ParserdCellValueType;
 import com.jl15988.excel2html.html.HtmlElement;
 import com.jl15988.excel2html.html.HtmlElementList;
@@ -52,18 +53,61 @@ public class CellValueParser {
         if (!isRichValue(cell)) {
             return null;
         }
+
+        // 单元格内容是否自动换行
+        boolean wrapText = cell.getCellStyle().getWrapText();
+
         HtmlElementList htmlElementList = new HtmlElementList();
         // 获取富文本内容
-        XSSFRichTextString richText = (XSSFRichTextString) cell.getRichStringCellValue();
-        int formattingRuns = richText.numFormattingRuns();
+        XSSFRichTextString richTextString = (XSSFRichTextString) cell.getRichStringCellValue();
+        String richText = richTextString.toString();
+
+        // 判断是否有尾部空白内容
+        Matcher matcher = Pattern.compile("\\s+$").matcher(richText);
+        boolean hasEmpty = matcher.find();
+        // 空白开始下标
+        Integer emptyStart = null;
+        if (hasEmpty) {
+            emptyStart = matcher.start();
+        }
+
+        int formattingRuns = richTextString.numFormattingRuns();
         for (int i = 0; i < formattingRuns; i++) {
-            int start = richText.getIndexOfFormattingRun(i);
-            int length = richText.getLengthOfFormattingRun(i);
-            XSSFFont xssfFont = richText.getFontOfFormattingRun(i);
-            String text = richText.toString().substring(start, start + length);
+            int start = richTextString.getIndexOfFormattingRun(i);
+            int length = richTextString.getLengthOfFormattingRun(i);
+            XSSFFont xssfFont = richTextString.getFontOfFormattingRun(i);
+            String text = richText.substring(start, start + length);
 
             // 解析字体样式
             FontICssStyle fontCssStyle = XSSFFontParser.parserXSSFFontToStyleMap(xssfFont);
+
+            if (wrapText && hasEmpty) {
+                // 判断内容尾部是否有空白字符，如果有，且之后全是开白字符，则使之不占用空间
+                if (emptyStart >= start && emptyStart <= (start + length)) {
+                    htmlElementList.add(HtmlElement.builder("span")
+                            .addStyle(fontCssStyle)
+                            .addChildElements(
+                                    HtmlElement.builder("")
+                                            .content(richText.substring(start, emptyStart))
+                                            .build(),
+                                    HtmlElement.builder("span")
+                                            .addStyle(fontCssStyle)
+                                            .addClass(CommonElementClass.VALUE_END_SPACES.value())
+                                            .content(text.substring(emptyStart - start))
+                                            .build()
+                            ).build()
+                    );
+                    continue;
+                } else if (start > emptyStart) {
+                    htmlElementList.add(HtmlElement.builder("span")
+                            .addStyle(fontCssStyle)
+                            .addClass(CommonElementClass.VALUE_END_SPACES.value())
+                            .content(text)
+                            .build()
+                    );
+                    continue;
+                }
+            }
 
             // 构建 span 标签
             HtmlElement spanEle = new HtmlElement("span");
@@ -197,31 +241,37 @@ public class CellValueParser {
      * @param cell 单元格
      */
     public static ParserdCellValue parseCellValue(Cell cell, Map<String, XSSFPictureData> embedFileMap) {
-        ParserdCellValue.ParserdCellValueBuilder parserdCellValueBuilder = ParserdCellValue
-                .builder()
-                .type(ParserdCellValueType.TEXT);
+        ParserdCellValue.ParserdCellValueBuilder parserdCellValueBuilder = ParserdCellValue.builder().type(ParserdCellValueType.TEXT);
 
         CellType cellType = cell.getCellType();
         if (CellType.STRING.equals(cellType)) {
             // 对于 string 类型，需要解析富文本
             HtmlElementList htmlElementList = parserCellRichValue(cell);
             if (Objects.isNull(htmlElementList)) {
-                return parserdCellValueBuilder.value(cell.getStringCellValue()).build();
+                String stringCellValue = cell.getStringCellValue();
+
+                if (cell.getCellStyle().getWrapText()) {
+                    // 判断单元格内容尾部是否有空白字符串，有的话处理成不占用空间的元素
+                    Matcher matcher = Pattern.compile("\\s+$").matcher(stringCellValue);
+                    if (matcher.find()) {
+                        int emptyStart = matcher.start();
+                        stringCellValue = matcher.replaceAll("") + HtmlElement.builder("span")
+                                .addClass(CommonElementClass.VALUE_END_SPACES.value())
+                                .content(stringCellValue.substring(emptyStart))
+                                .build().toHtmlString();
+                    }
+                }
+                return parserdCellValueBuilder.value(stringCellValue).build();
             } else {
-                return parserdCellValueBuilder
-                        .type(ParserdCellValueType.RICH_HTML_CONTENT)
-                        .value(htmlElementList.toHtmlString())
-                        .build();
+                return parserdCellValueBuilder.type(ParserdCellValueType.RICH_HTML_CONTENT).value(htmlElementList.toHtmlString()).build();
             }
         } else if (Objects.nonNull(embedFileMap) && CellType.FORMULA.equals(cellType)) {
             String cellFormula = cell.getCellFormula();
             if (cellFormula.startsWith("_xlfn.DISPIMG(\"")) {
                 // 处理嵌入图片
                 String embedValue = parserCellEmbedFile(cell, embedFileMap);
-                if (Objects.nonNull(embedValue)) return parserdCellValueBuilder
-                        .type(ParserdCellValueType.HTML_IMG)
-                        .value(embedValue)
-                        .build();
+                if (Objects.nonNull(embedValue))
+                    return parserdCellValueBuilder.type(ParserdCellValueType.HTML_IMG).value(embedValue).build();
             }
         }
         // 官方提供的内容解析

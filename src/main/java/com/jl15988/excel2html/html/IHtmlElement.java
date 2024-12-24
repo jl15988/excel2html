@@ -257,6 +257,23 @@ public interface IHtmlElement<T> {
     T addChildElement(int index, IHtmlElement<?> child);
 
     /**
+     * 添加子元素
+     *
+     * @param childList 子元素
+     */
+    T addChildElements(List<IHtmlElement<?>> childList);
+
+    /**
+     * 添加子元素
+     *
+     * @param children 子元素
+     */
+    default T addChildElements(IHtmlElement<?>... children) {
+        List<IHtmlElement<?>> elements = Arrays.asList(children);
+        return this.addChildElements(elements);
+    }
+
+    /**
      * 移除某个子元素
      *
      * @param child 子元素
