@@ -3,8 +3,8 @@ package com.jl15988.excel2html.parser;
 import com.jl15988.excel2html.Excel2HtmlUtil;
 import com.jl15988.excel2html.converter.UnitConstant;
 import com.jl15988.excel2html.html.HtmlElement;
-import com.jl15988.excel2html.model.unit.Emu;
-import com.jl15988.excel2html.model.unit.Point;
+import com.jl15988.excel2html.model.unit.UnitEmu;
+import com.jl15988.excel2html.model.unit.UnitPoint;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Drawing;
 import org.apache.poi.ss.usermodel.Row;
@@ -58,10 +58,10 @@ public class DrawingValueParser {
                     int row2 = anchor.getRow2();
 
                     // 获取锚点在所在单元格的坐标
-                    double dx1 = new Emu(anchor.getDx1(), dpi).toPixel().getValue();
-                    double dy1 = new Emu(anchor.getDy1(), dpi).toPixel().getValue();
-                    double dx2 = new Emu(anchor.getDx2(), dpi).toPixel().getValue();
-                    double dy2 = new Emu(anchor.getDy2(), dpi).toPixel().getValue();
+                    double dx1 = new UnitEmu(anchor.getDx1(), dpi).toPixel().getValue();
+                    double dy1 = new UnitEmu(anchor.getDy1(), dpi).toPixel().getValue();
+                    double dx2 = new UnitEmu(anchor.getDx2(), dpi).toPixel().getValue();
+                    double dy2 = new UnitEmu(anchor.getDy2(), dpi).toPixel().getValue();
 
                     byte[] imageBytes = pictureShape.getPictureData().getData();
                     String base64Image = "data:image/png;base64," + Base64.getEncoder().encodeToString(imageBytes);
@@ -103,7 +103,7 @@ public class DrawingValueParser {
             }
             totalHeight += height;
         }
-        return new Point(totalHeight).toPixel().getValue();
+        return new UnitPoint(totalHeight).toPixel().getValue();
     }
 
     private static void drawShape(XSSFSimpleShape simpleShape) {

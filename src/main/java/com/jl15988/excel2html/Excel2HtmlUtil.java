@@ -1,8 +1,8 @@
 package com.jl15988.excel2html;
 
 import com.jl15988.excel2html.converter.FontSizeConverter;
-import com.jl15988.excel2html.model.unit.Inch;
-import com.jl15988.excel2html.model.unit.Millimetre;
+import com.jl15988.excel2html.model.unit.UnitInch;
+import com.jl15988.excel2html.model.unit.UnitMillimetre;
 import com.jl15988.excel2html.parser.CellEmbedFileParser;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
@@ -73,8 +73,8 @@ public class Excel2HtmlUtil {
         XSSFPrintSetup printSetup = (XSSFPrintSetup) sheet.getPrintSetup();
         double topMargin = printSetup.getTopMargin();
         double bottomMargin = printSetup.getBottomMargin();
-        double totalMargin = new Inch(topMargin + bottomMargin).toPoint().getValue();
-        double A4_height = new Millimetre(297).toPoint().getValue();
+        double totalMargin = new UnitInch(topMargin + bottomMargin).toPoint().getValue();
+        double A4_height = new UnitMillimetre(297).toPoint().getValue();
 //        double thresholdValue = 18;
 //        double thresholdValue = 15;
         double thresholdValue = 0;

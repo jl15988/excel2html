@@ -22,6 +22,10 @@ public class UnitConstant {
     public static final String POINT_UNIT = "pt";
     // 默认毫米单位
     public static final String MILLIMETRE_UNIT = "mm";
+    // 默认厘米单位
+    public static final String CENTIMETER_UNIT = "cm";
     // 默认英寸单位
     public static final String INCH_UNIT = "in";
+    // 默认EMU单位
+    public static final String ENUM_UNIT = "emu";
 }

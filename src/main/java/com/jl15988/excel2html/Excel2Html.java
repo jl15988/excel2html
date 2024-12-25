@@ -14,8 +14,8 @@ import com.jl15988.excel2html.html.IHtmlElement;
 import com.jl15988.excel2html.model.parser.ParserdCellValue;
 import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
-import com.jl15988.excel2html.model.unit.Pixel;
-import com.jl15988.excel2html.model.unit.Point;
+import com.jl15988.excel2html.model.unit.UnitPixel;
+import com.jl15988.excel2html.model.unit.UnitPoint;
 import com.jl15988.excel2html.parser.CellStyleParser;
 import com.jl15988.excel2html.parser.CellValueParser;
 import com.jl15988.excel2html.parser.DrawingValueParser;
@@ -332,8 +332,8 @@ public class Excel2Html {
                 // 对于为空的行，添加默认的单元格
                 for (int cellIndex = startCol; cellIndex <= endColIndex; cellIndex++) {
                     HtmlElement td = new HtmlElement("td");
-                    td.addStyle("height", new Point(defaultRowHeightInPoints, this.dpi).toString());
-                    td.addStyle("width", new Pixel(defaultColumnWidthInPixels, this.dpi).toString());
+                    td.addStyle("height", new UnitPoint(defaultRowHeightInPoints, this.dpi).toString());
+                    td.addStyle("width", new UnitPixel(defaultColumnWidthInPixels, this.dpi).toString());
                     tr.addChildElement(td);
                 }
 
@@ -494,8 +494,8 @@ public class Excel2Html {
                         totalHeight += rowItem.getHeightInPoints();
                     }
                 }
-                String mergedTotalHeightC = new Point(totalHeight - new Pixel(3, dpi).toPoint().getValue(), this.dpi).toString();
-                String mergedTotalHeight = new Point(totalHeight, this.dpi).toString();
+                String mergedTotalHeightC = new UnitPoint(totalHeight - new UnitPixel(3, dpi).toPoint().getValue(), this.dpi).toString();
+                String mergedTotalHeight = new UnitPoint(totalHeight, this.dpi).toString();
                 parserdStyleResult.addCellContainerStyle("height", mergedTotalHeightC);
                 parserdStyleResult.addCellContainerStyle("max-height", mergedTotalHeightC);
                 parserdStyleResult.addCellContainerStyle("min-height", mergedTotalHeightC);
