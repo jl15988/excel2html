@@ -1,11 +1,13 @@
 package com.jl15988.excel2html.model.unit;
 
-import com.jl15988.excel2html.converter.UnitConstant;
+import com.jl15988.excel2html.constant.UnitConstant;
 import com.jl15988.excel2html.enums.UnitType;
 import com.jl15988.excel2html.exception.UnitException;
 import com.jl15988.excel2html.utils.BeanUtil;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Objects;
 
 /**
  * 单位
@@ -82,7 +84,40 @@ public class Unit<T extends Unit<T>> {
      * @return 转换后的单位
      */
     public <R extends Unit<R>> Unit<R> converterTo(Class<R> targetClass) {
-        return new Unit<>(targetClass, this.value, this.dpi);
+        String method = getConvertMethodName(targetClass);
+        Double conRes = BeanUtil.exeMethod(this.clazz, method)
+                .judge(m -> m.getParameterCount() == 1, this.value)
+                .judge(m -> m.getParameterCount() == 2, this.value, this.dpi)
+                .errorHandle(throwable -> {
+                    if (Objects.nonNull(throwable)) {
+                        throw new UnitException("Unit converter fail", throwable);
+                    }
+                })
+                .to(Double.class);
+
+        if (Objects.isNull(conRes)) {
+            throw new UnitException("Unit converter fail.");
+        }
+        return new Unit<>(targetClass, conRes, this.dpi);
+    }
+
+    private static <R extends Unit<R>> String getConvertMethodName(Class<R> targetClass) {
+        String method = null;
+        if (UnitPixel.class == targetClass) {
+            method = "toPixel";
+        } else if (UnitPoint.class == targetClass) {
+            method = "toPoint";
+        } else if (UnitInch.class == targetClass) {
+            method = "toInch";
+        } else if (UnitMillimetre.class == targetClass) {
+            method = "toMillimetre";
+        } else if (UnitEmu.class == targetClass) {
+            method = "toEmu";
+        }
+        if (method == null) {
+            throw new UnitException("Unit.converterTo targetClass is invalid");
+        }
+        return method;
     }
 
     /**

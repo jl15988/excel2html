@@ -1,6 +1,9 @@
 package com.jl15988.excel2html.utils;
 
+import com.jl15988.excel2html.stream.MethodStream;
+
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 /**
  * @author Jalon
@@ -35,5 +38,46 @@ public class BeanUtil {
      */
     public static <T> T newInstance(Class<T> targetClass) {
         return BeanUtil.newInstance(targetClass, new Class[]{}, new Object[]{});
+    }
+
+//    /**
+//     * 执行指定类的方法获取结果，没有指定方法返回 null
+//     *
+//     * @param clazz       指定类
+//     * @param methodName  方法名称
+//     * @param resultClass 结果类型类
+//     * @param args        方法参数
+//     * @param <T>         指定类
+//     * @param <R>         执行方法结果类型
+//     * @return 结果
+//     */
+//    public static <T, R> R exeMethod(Class<T> clazz, String methodName, Class<R> resultClass, Object... args) throws InvocationTargetException, IllegalAccessException {
+//        Method[] methods = clazz.getMethods();
+//        for (Method method : methods) {
+//            method.setAccessible(true);
+//            if (method.getName().equals(methodName)) {
+//                return (R) method.invoke(clazz);
+//            }
+//        }
+//        return null;
+//    }
+
+    /**
+     * 执行指定类的方法获取结果，没有指定方法返回 null
+     *
+     * @param clazz      指定类
+     * @param methodName 方法名称
+     * @param <T>        指定类
+     * @return 方法流转
+     */
+    public static <T> MethodStream exeMethod(Class<T> clazz, String methodName) {
+        Method[] methods = clazz.getMethods();
+        for (Method method : methods) {
+            method.setAccessible(true);
+            if (method.getName().equals(methodName)) {
+                return new MethodStream(clazz, method);
+            }
+        }
+        return new MethodStream(clazz, null);
     }
 }

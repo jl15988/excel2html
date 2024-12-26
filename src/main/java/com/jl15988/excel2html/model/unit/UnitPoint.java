@@ -35,4 +35,60 @@ public class UnitPoint extends Unit<UnitPoint> {
     public static UnitPoint formEmu(UnitEmu unitEmu) {
         return Unit.to(unitEmu, UnitPoint.class);
     }
+
+    /**
+     * 转像素
+     *
+     * @param points 磅
+     * @return 像素
+     */
+    public static double toPixel(double points, int dpi) {
+        // 英寸
+        double inch = 72;
+        // 1磅=1/72英寸，而1英寸所含有DPI个像素
+        // 近似转换为像素,96dpi / 72英寸
+        return points * (((double) dpi) / inch);
+    }
+
+    /**
+     * 转磅
+     *
+     * @param points 磅
+     * @return 磅
+     */
+    public static double toPoint(double points) {
+        return points;
+    }
+
+    /**
+     * 转毫米
+     *
+     * @param points 磅
+     * @return 毫米
+     */
+    public static double toMillimetre(double points, int dpi) {
+        double px = toPixel(points, dpi);
+        return UnitPixel.toMillimetre(px, dpi);
+    }
+
+    /**
+     * 转英寸
+     *
+     * @param points 磅
+     * @return 英寸
+     */
+    public static double toInch(double points) {
+        return points / 72;
+    }
+
+    /**
+     * 转EMU
+     *
+     * @param points 磅
+     * @return EMU
+     */
+    public static double toEmu(double points) {
+        double inch = toInch(points);
+        return UnitInch.toEmu(inch);
+    }
 }
