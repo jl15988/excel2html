@@ -18,6 +18,12 @@ public class CssStyle implements ICssStyle<CssStyle> {
     }
 
     @Override
+    public CssStyle addAll(Map<String, Object> styleMap) {
+        this.styleMap.putAll(styleMap);
+        return this;
+    }
+
+    @Override
     public Object get(String name) {
         return styleMap.get(name);
     }

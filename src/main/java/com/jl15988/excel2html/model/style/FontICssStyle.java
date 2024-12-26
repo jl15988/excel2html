@@ -20,6 +20,12 @@ public class FontICssStyle implements ICssStyle<FontICssStyle> {
     }
 
     @Override
+    public FontICssStyle addAll(Map<String, Object> styleMap) {
+        this.styleMap.putAll(styleMap);
+        return this;
+    }
+
+    @Override
     public Object get(String name) {
         return styleMap.get(name);
     }

@@ -2,6 +2,7 @@ package com.jl15988.excel2html.parser;
 
 import com.jl15988.excel2html.Excel2HtmlUtil;
 import com.jl15988.excel2html.converter.ColorConverter;
+import com.jl15988.excel2html.html.CssStyle;
 import com.jl15988.excel2html.model.parser.ParserdStyle;
 import com.jl15988.excel2html.model.parser.ParserdStyleResult;
 import com.jl15988.excel2html.model.style.CommonCss;
@@ -13,9 +14,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -94,6 +93,12 @@ public class CellStyleParser {
         return classList;
     }
 
+    /**
+     * 解析单元格横向对齐方式样式
+     *
+     * @param cell 单元格
+     * @return 样式
+     */
     public static ParserdStyle parserCellHorizontalAlignStyle(Cell cell) {
         ParserdStyle parserdStyle = new ParserdStyle();
         // 水平对齐方式
@@ -198,6 +203,12 @@ public class CellStyleParser {
         return classList;
     }
 
+    /**
+     * 解析单元格纵向对齐方式样式
+     *
+     * @param cell 单元格
+     * @return 样式
+     */
     public static ParserdStyle parserCellVerticalAlignStyle(Cell cell) {
         ParserdStyle parserdStyle = new ParserdStyle();
         // 垂直对齐方式
@@ -254,6 +265,13 @@ public class CellStyleParser {
         return classList;
     }
 
+    /**
+     * 解析单元格不同位置的边框样式
+     *
+     * @param cell     单元格
+     * @param position 位置
+     * @return 样式
+     */
     public static Map<String, Object> parserCellBorderTypeStyle(Cell cell, String position) {
         Map<String, Object> styleMap = new HashMap<>();
         String borderStyleName = "border" + (position != null ? "-" + position : "");
@@ -329,6 +347,12 @@ public class CellStyleParser {
         return styleMap;
     }
 
+    /**
+     * 解析单元格边框样式
+     *
+     * @param cell 单元格
+     * @return 样式
+     */
     public static Map<String, Object> parserCellBorderStyle(Cell cell) {
         Map<String, Object> styleMap = new HashMap<>();
 
@@ -343,13 +367,71 @@ public class CellStyleParser {
         return styleMap;
     }
 
+    /**
+     * 解析字体样式
+     *
+     * @param font 字体
+     * @return 样式
+     */
+    public static CssStyle parserFontStyle(Font font) {
+        CssStyle cssStyle = new CssStyle();
+
+        if (Objects.isNull(font)) return cssStyle;
+
+        // 颜色
+        if (font instanceof XSSFFont) {
+            XSSFFont xssfFont = (XSSFFont) font;
+            XSSFColor xssfColor = xssfFont.getXSSFColor();
+            String fontRgba = ColorConverter.xSSFColorToRGBAString(xssfColor);
+            cssStyle.setIfExists("color", fontRgba);
+            // 加粗
+            if (xssfFont.getBold()) {
+                cssStyle.setIfExists("font-weight", "bold");
+            }
+            // 大小
+            short fontHeightInPoints = xssfFont.getFontHeightInPoints();
+            cssStyle.setIfExists("font-size", new UnitPoint(fontHeightInPoints).toString());
+            // 斜体
+            if (xssfFont.getItalic()) {
+                cssStyle.setIfExists("font-style", "italic");
+            }
+            // 删除线
+            if (xssfFont.getStrikeout()) {
+                cssStyle.setIfExists("text-decoration", "line-through");
+            }
+            // 下划线
+            if (xssfFont.getUnderline() != Font.U_NONE) {
+                cssStyle.setIfExists("text-decoration", "underline");
+            }
+            String fontName = xssfFont.getFontName();
+            cssStyle.setIfExists("font-family", fontName);
+        }
+
+        return cssStyle;
+    }
+
+    /**
+     * 解析单元格字体样式
+     *
+     * @param cell 单元格
+     * @return 样式
+     */
+    public static CssStyle parserCellFontStyle(Cell cell) {
+        int fontIndex = cell.getCellStyle().getFontIndex();
+        return CellStyleParser.parserFontStyle(cell.getRow().getSheet().getWorkbook().getFontAt(fontIndex));
+    }
+
+    /**
+     * 解析单元格样式
+     *
+     * @param cell 单元格
+     * @param dpi  屏幕 dpi
+     * @return 样式
+     */
     public static ParserdStyleResult parserCellStyle(Cell cell, int dpi) {
         ParserdStyleResult parserdStyleResult = new ParserdStyleResult();
 
         Row row = cell.getRow();
-        Sheet sheet = row.getSheet();
-        Workbook workbook = sheet.getWorkbook();
-
         XSSFCellStyle cellStyle = (XSSFCellStyle) cell.getCellStyle();
 
         // 行高
@@ -393,33 +475,8 @@ public class CellStyleParser {
             parserdStyleResult.cellContainerStyle.put("white-space", "pre");
         }
         // 字体
-        int fontIndex = cellStyle.getFontIndex();
-        XSSFFont fontAt = (XSSFFont) workbook.getFontAt(fontIndex);
-        // 颜色
-        XSSFColor xssfColor = fontAt.getXSSFColor();
-        String fontRgba = ColorConverter.xSSFColorToRGBAString(xssfColor);
-        parserdStyleResult.putIfExists(ParserdStyleResult::getCellContainerStyle, "color", fontRgba);
-        // 加粗
-        if (fontAt.getBold()) {
-            parserdStyleResult.cellContainerStyle.put("font-weight", "bold");
-        }
-        // 大小
-        short fontHeightInPoints = fontAt.getFontHeightInPoints();
-        parserdStyleResult.cellContainerStyle.put("font-size", new UnitPoint(fontHeightInPoints).toString());
-        // 斜体
-        if (fontAt.getItalic()) {
-            parserdStyleResult.cellContainerStyle.put("font-style", "italic");
-        }
-        // 删除线
-        if (fontAt.getStrikeout()) {
-            parserdStyleResult.cellContainerStyle.put("text-decoration", "line-through");
-        }
-        // 下划线
-        if (fontAt.getUnderline() != Font.U_NONE) {
-            parserdStyleResult.cellContainerStyle.put("text-decoration", "underline");
-        }
-        String fontName = fontAt.getFontName();
-        parserdStyleResult.cellContainerStyle.put("font-family", fontName);
+        CssStyle fontCssStyle = CellStyleParser.parserCellFontStyle(cell);
+        parserdStyleResult.cellContainerStyle.putAll(fontCssStyle.getMap());
 
         return parserdStyleResult;
     }

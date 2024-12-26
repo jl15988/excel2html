@@ -21,6 +21,7 @@ import com.jl15988.excel2html.parser.CellValueParser;
 import com.jl15988.excel2html.parser.DrawingValueParser;
 import com.jl15988.excel2html.utils.FileUtil;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -32,7 +33,12 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author Jalon
@@ -510,6 +516,8 @@ public class Excel2Html {
     }
 
     private HtmlPage getHtmlPage() {
+        Font defaultWorkbookFont = Excel2HtmlUtil.getDefaultWorkbookFont(this.workbook);
+
         HtmlPage htmlPage = new HtmlPage();
         htmlPage.setLang("zh-CN");
         htmlPage.addMeta(HtmlMeta
@@ -548,11 +556,11 @@ public class Excel2Html {
                         "    mso-pattern: auto;\n" +
                         "    mso-background-source: auto;\n" +
                         "    color: #000000;\n" +
-                        "    font-size: 11.0pt;\n" +
+                        "    font-size: " + defaultWorkbookFont.getFontHeightInPoints() + "pt;\n" +
                         "    font-weight: 400;\n" +
                         "    font-style: normal;\n" +
                         "    text-decoration: none;\n" +
-                        "    font-family: 宋体;\n" +
+                        "    font-family: " + defaultWorkbookFont.getFontName() + ";\n" +
                         "    mso-generic-font-family: auto;\n" +
                         "    mso-font-charset: 134;\n" +
                         "    border: none;\n" +
