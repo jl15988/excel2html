@@ -175,7 +175,7 @@ public class Excel2HtmlUtil {
             return workbook.getFontAt(0);
         }
         Font newFont = workbook.createFont();
-        newFont.setFontName("宋体");
+        newFont.setFontName(Excel2Html.DEFAULT_ALTERNATE_FONT_FAMILY);
         newFont.setFontHeightInPoints((short) 11);
         return newFont;
     }

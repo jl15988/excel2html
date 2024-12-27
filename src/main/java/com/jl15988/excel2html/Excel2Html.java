@@ -41,10 +41,17 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
+ * excel 转 html
+ *
  * @author Jalon
  * @since 2024/12/4 9:13
  **/
 public class Excel2Html {
+
+    /**
+     * 当未获取到 workbook 默认字体时的代替字体
+     */
+    public static String DEFAULT_ALTERNATE_FONT_FAMILY = "宋体";
 
     /**
      * dpi
