@@ -1,6 +1,6 @@
 package com.jl15988.excel2html.utils;
 
-import com.jl15988.excel2html.stream.MethodStream;
+import com.jl15988.excel2html.wander.MethodExeWander;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -70,14 +70,14 @@ public class BeanUtil {
      * @param <T>        指定类
      * @return 方法流转
      */
-    public static <T> MethodStream exeMethod(Class<T> clazz, String methodName) {
+    public static <T> MethodExeWander exeMethod(Class<T> clazz, String methodName) {
         Method[] methods = clazz.getMethods();
         for (Method method : methods) {
             method.setAccessible(true);
             if (method.getName().equals(methodName)) {
-                return new MethodStream(clazz, method);
+                return new MethodExeWander(clazz, method);
             }
         }
-        return new MethodStream(clazz, null);
+        return new MethodExeWander(clazz, null);
     }
 }
