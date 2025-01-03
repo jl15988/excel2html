@@ -541,13 +541,13 @@ public class Excel2Html {
                         ".exc-page {\n" +
                         "    position: relative;\n" +
                         "}\n" +
-                        "table {\n" +
+                        ".exc-page table {\n" +
                         "    table-layout: fixed;\n" +
                         "    box-sizing: border-box;\n" +
                         "    border-collapse: collapse;\n" +
                         "    border-spacing: 0;\n" +
                         "}\n" +
-                        "td {\n" +
+                        ".exc-page td {\n" +
                         "    overflow: visible;\n" +
                         "    box-sizing: border-box;\n" +
                         "    mso-style-parent: style0;\n" +
