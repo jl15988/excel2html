@@ -447,6 +447,7 @@ public class Excel2Html {
         div.addChildElement(table);
         htmlPage.addElement(div);
         // 添加图片图形解析结果
+        sheet.setDefaultColumnWidth(Excel2HtmlUtil.getDefaultColumnWidth(workbook));
         htmlPage.addElements(DrawingValueParser.parserDrawing(sheet, this.dpi));
         if (this.isCompressStyle) {
             // 添加通用样式
@@ -570,7 +571,7 @@ public class Excel2Html {
                         "    font-family: " + defaultWorkbookFont.getFontName() + ";\n" +
                         "    mso-generic-font-family: auto;\n" +
                         "    mso-font-charset: 134;\n" +
-                        "    border: none;\n" +
+//                        "    border: none;\n" +
                         "    mso-protection: locked visible;" +
                         "}\n" +
                         // 合并的单元格超出隐藏

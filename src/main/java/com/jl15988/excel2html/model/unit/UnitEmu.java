@@ -68,7 +68,7 @@ public class UnitEmu extends Unit<UnitEmu> {
      * @return 磅
      */
     public static double toInch(double emu) {
-        return emu * UnitConstant.EMU_PER_INCH;
+        return emu / UnitConstant.EMU_PER_INCH;
     }
 
     /**

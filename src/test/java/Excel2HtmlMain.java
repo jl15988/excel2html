@@ -1,8 +1,10 @@
+import com.jl15988.excel2html.Excel2Html;
 import com.jl15988.excel2html.Excel2HtmlHelper;
 import com.jl15988.excel2html.utils.FileUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.net.URL;
@@ -33,11 +35,12 @@ public class Excel2HtmlMain {
             assert fileData != null;
             FileOutputStream fos = new FileOutputStream(htmlFilePath);
 
-            XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(fileData));
-            String htmlString = Excel2HtmlHelper.toHtml(workbook.getSheetAt(0)).toHtmlString();
+//            XSSFWorkbook workbook = new XSSFWorkbook(new ByteArrayInputStream(fileData));
+//            String htmlString = Excel2HtmlHelper.toHtml(workbook.getSheetAt(0)).toHtmlString();
 
-//            Excel2Html excel2Html = new Excel2Html(new File(excelFilePath));
-//            String htmlString = excel2Html.buildHtml(0).toHtmlString();
+            // 如果你想解析 excel 中的图片，需要通过 excel 文件构建 Excel2Html 对象，或者通过 Excel2HtmlUtil 自己获取嵌入图片，然后在 Excel2HtmlHelper.toHtml 方法中传入
+            Excel2Html excel2Html = new Excel2Html(new File(excelFilePath));
+            String htmlString = excel2Html.buildHtmlWithSheetIndex(0).toHtmlString();
 
             fos.write((htmlString == null ? "" : htmlString).getBytes(StandardCharsets.UTF_8));
 
