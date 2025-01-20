@@ -606,6 +606,8 @@ public class Excel2Html {
                         ".exc-table-cell-container {\n" +
                         "    display: flex;\n" +
                         "    width: 100%;\n" +
+                        // 超出隐藏，避免单元格背景影响其他单元格
+                        "    overflow: hidden;\n" +
                         "}\n" +
                         // 单元格内 table 容器
                         ".exc-table-cell-table {\n" +
