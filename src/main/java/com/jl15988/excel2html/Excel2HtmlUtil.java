@@ -1,8 +1,10 @@
 package com.jl15988.excel2html;
 
+import com.jl15988.excel2html.constant.UnitConstant;
 import com.jl15988.excel2html.converter.FontSizeConverter;
 import com.jl15988.excel2html.model.unit.UnitInch;
 import com.jl15988.excel2html.model.unit.UnitMillimetre;
+import com.jl15988.excel2html.model.unit.UnitPoint;
 import com.jl15988.excel2html.parser.CellEmbedFileParser;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
@@ -66,19 +68,27 @@ public class Excel2HtmlUtil {
 
     /**
      * 获取打印页的最后一行
+     *
+     * <p>通过计算行、列占用截取行、列，可能不太准确</p>
+     *
+     * @param sheet       sheet
+     * @param paperHeight 纸张高度，单位毫米
+     * @return 打印页的最后一行
      */
-    public static int getPrintLastRowNum(Sheet sheet) {
-        //        PrintSetup.A4_PAPERSIZE
-//        String printArea = workbook.getPrintArea(0);
+    public static int getPrintLastRowNum(Sheet sheet, Float paperHeight) {
         XSSFPrintSetup printSetup = (XSSFPrintSetup) sheet.getPrintSetup();
+
+        // 获取页边距
         double topMargin = printSetup.getTopMargin();
         double bottomMargin = printSetup.getBottomMargin();
-        double totalMargin = new UnitInch(topMargin + bottomMargin).toPoint().getValue();
-        double A4_height = new UnitMillimetre(297).toPoint().getValue();
-//        double thresholdValue = 18;
-//        double thresholdValue = 15;
+        double totalVerticalMargin = new UnitInch(topMargin + bottomMargin).toPoint().getValue();
+
+        // 转换为点
+        double paperHeightPoints = new UnitMillimetre(paperHeight).toPoint().getValue();
+
+        // 考虑一些调整空间，避免精确的边缘情况
         double thresholdValue = 0;
-        double overHeight = A4_height - totalMargin - thresholdValue;
+        double overHeight = paperHeightPoints - totalVerticalMargin - thresholdValue;
 
         int lastRowNum = sheet.getLastRowNum();
         double defaultRowHeightInPoints = (double) sheet.getDefaultRowHeightInPoints();
@@ -87,18 +97,75 @@ public class Excel2HtmlUtil {
         double totalHeight = 0;
         for (int rowIndex = 0; rowIndex <= lastRowNum; rowIndex++) {
             Row row = sheet.getRow(rowIndex);
-            if (Objects.nonNull(row)) {
-                totalHeight += (double) row.getHeightInPoints();
-            } else {
-                totalHeight += defaultRowHeightInPoints;
-            }
+            double rowHeight = Objects.nonNull(row) ? (double) row.getHeightInPoints() : defaultRowHeightInPoints;
+            totalHeight += rowHeight;
             if (totalHeight > overHeight) {
+                // 判断差值是否超过最后一行一半高度
+                double difference = totalHeight - overHeight;
+                System.out.println(rowHeight);
+                System.out.println(difference);
+                if (difference > rowHeight / 2) {
+                    currentRowNum = rowIndex + 1;
+                }
                 break;
+            } else {
+                currentRowNum = rowIndex + 1;
             }
-            currentRowNum = rowIndex + 1;
         }
 
         return currentRowNum;
+    }
+
+    /**
+     * 获取打印页的最后一列
+     *
+     * <p>通过计算行、列占用截取行、列，可能不太准确</p>
+     *
+     * @param sheet      sheet
+     * @param paperWidth 纸张宽度，单位毫米
+     * @return 打印页的最后一列
+     */
+    public static int getPrintLastColNum(Sheet sheet, Float paperWidth) {
+        XSSFPrintSetup printSetup = (XSSFPrintSetup) sheet.getPrintSetup();
+
+        // 获取页边距
+        double leftMargin = printSetup.getLeftMargin();
+        double rightMargin = printSetup.getRightMargin();
+        System.out.println(leftMargin + " " + rightMargin);
+        double totalHorizontalMargin = new UnitInch(leftMargin + rightMargin).toPoint().getValue();
+
+        // 转换为点
+        double paperWidthPoints = new UnitMillimetre(paperWidth).toPoint().getValue();
+
+        // 考虑一些调整空间，避免精确的边缘情况
+        double thresholdValue = 0;
+        double overWidth = paperWidthPoints - totalHorizontalMargin - thresholdValue;
+
+        // 获取最大列数
+        int maxColNum = getMaxColNum(sheet);
+        int currentColNum = 0;
+
+        double totalWidth = 0;
+        for (int colIndex = 0; colIndex < maxColNum; colIndex++) {
+            // 获取列宽（以磅为单位）
+            int colWidthInPixels = getColumnWidthInPixels(sheet, colIndex);
+            // 将像素转换为磅
+            double colWidthInPoints = new UnitPoint(colWidthInPixels, UnitConstant.DEFAULT_DPI).getValue();
+
+            totalWidth += colWidthInPoints;
+            if (totalWidth > overWidth) {
+                // 判断差值是否超过最后一列一半宽度
+                double difference = totalWidth - overWidth;
+                if (difference > colWidthInPoints / 2) {
+                    currentColNum = colIndex;
+                }
+                break;
+            } else {
+                currentColNum = colIndex + 1;
+            }
+        }
+
+        return currentColNum;
     }
 
     /**

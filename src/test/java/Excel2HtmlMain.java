@@ -40,7 +40,7 @@ public class Excel2HtmlMain {
 
             // 如果你想解析 excel 中的图片，需要通过 excel 文件构建 Excel2Html 对象，或者通过 Excel2HtmlUtil 自己获取嵌入图片，然后在 Excel2HtmlHelper.toHtml 方法中传入
             Excel2Html excel2Html = new Excel2Html(new File(excelFilePath));
-            String htmlString = excel2Html.buildHtmlWithSheetIndex(0).toHtmlString();
+            String htmlString = excel2Html.setPaperMode(147f, 209f).buildHtmlWithSheetIndex(0).toHtmlString();
 
             fos.write((htmlString == null ? "" : htmlString).getBytes(StandardCharsets.UTF_8));
 
