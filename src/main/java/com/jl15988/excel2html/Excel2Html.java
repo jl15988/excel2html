@@ -41,7 +41,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * excel 转 html
+ * Excel 转 HTML 的核心处理类
+ * <p>
+ * 提供将Excel工作表转换为HTML页面的功能，支持保留单元格样式、合并单元格、
+ * 图片渲染等功能，尽可能地还原Excel原本的样式。
+ * </p>
  *
  * @author Jalon
  * @since 2024/12/4 9:13
@@ -54,75 +58,93 @@ public class Excel2Html {
     public static String DEFAULT_ALTERNATE_FONT_FAMILY = "宋体";
 
     /**
-     * dpi
+     * 屏幕分辨率DPI值，用于计算像素转换
+     * 默认值为常量 UnitConstant.DEFAULT_DPI（通常为96）
      */
     private int dpi = UnitConstant.DEFAULT_DPI;
 
     /**
-     * 文件数据
+     * Excel文件的字节数据
      */
     private byte[] fileData;
 
     /**
-     * 文件类型
+     * 文件类型（例如：xlsx）
      */
     private String fileType;
 
     /**
-     * sheet-构建后的 html
+     * 存储每个Sheet对应的HTML页面
+     * key: Sheet索引
+     * value: 构建的HTML页面
      */
     private final Map<Integer, HtmlPage> sheetToHtmlMap;
 
     /**
-     * 是否启用压缩样式
+     * 是否启用样式压缩
+     * 启用后会将重复样式合并为CSS类，减小HTML文件大小
      */
     private boolean isCompressStyle = true;
 
     /**
-     * 是否加载嵌入文件
+     * 是否加载嵌入文件（如图片）
      */
     private boolean isLoadEmbedFile = true;
 
     /**
-     * 纸张宽度
+     * 纸张宽度（单位：毫米）
+     * 用于纸张模式下的计算
      */
     private Float paperWidth = null;
 
     /**
-     * 纸张高度
+     * 纸张高度（单位：毫米）
+     * 用于纸张模式下的计算
      */
     private Float paperHeight = null;
 
     /**
      * 是否按纸张大小转换
+     * 开启后会根据纸张大小限制转换的行列范围
      */
     private boolean isPaperMode = false;
 
     /**
      * 嵌入文件缓存
+     * key: 嵌入文件的ID
+     * value: 图片数据
      */
     private Map<String, XSSFPictureData> embedFileMap;
 
     /**
-     * 工作簿
+     * Excel工作簿对象
      */
     private Workbook workbook;
 
     /**
-     * 单元格格式化
+     * 单元格值格式化器
+     * 用于自定义单元格值的格式化处理
      */
     private ICellValueFormater cellValueFormater;
 
     /**
-     * tr 元素处理器
+     * tr元素处理器
+     * 用于自定义表格行的HTML元素处理
      */
     private ITrElementHandler trElementHandler;
 
     /**
      * 单元格处理器
+     * 用于自定义单元格的处理逻辑
      */
     private ICellHandler cellHandler;
 
+    /**
+     * 通过字节数组创建Excel2Html实例
+     *
+     * @param fileData Excel文件的字节数据
+     * @throws IOException 如果文件读取失败
+     */
     public Excel2Html(byte[] fileData) throws IOException {
         this.fileData = fileData;
         this.sheetToHtmlMap = new HashMap<>();
@@ -141,16 +163,34 @@ public class Excel2Html {
         this.sheetToHtmlMap = new HashMap<>();
     }
 
+    /**
+     * 设置DPI值
+     *
+     * @param dpi 屏幕分辨率DPI值，用于计算像素转换
+     * @return 当前实例，支持链式调用
+     */
     public Excel2Html setDpi(int dpi) {
         this.dpi = dpi;
         return this;
     }
 
+    /**
+     * 设置是否启用样式压缩
+     *
+     * @param compressStyle 是否启用样式压缩
+     * @return 当前实例，支持链式调用
+     */
     public Excel2Html setCompressStyle(boolean compressStyle) {
         this.isCompressStyle = compressStyle;
         return this;
     }
 
+    /**
+     * 设置是否加载嵌入文件
+     *
+     * @param loadEmbedFile 是否加载嵌入文件
+     * @return 当前实例，支持链式调用
+     */
     public Excel2Html setLoadEmbedFile(boolean loadEmbedFile) {
         this.isLoadEmbedFile = loadEmbedFile;
         return this;
@@ -158,12 +198,14 @@ public class Excel2Html {
 
     /**
      * 设置是否按纸张大小转换
-     *
-     * <p>通过计算行、列占用截取行、列，可能不太准确</p>
+     * <p>
+     * 开启后会根据纸张大小限制转换的行列范围，通过计算行、列占用截取行、列。
+     * 注意：计算结果可能不太准确。
+     * </p>
      *
      * @param paperWidth  纸张宽度，单位毫米
      * @param paperHeight 纸张高度，单位毫米
-     * @return this
+     * @return 当前实例，支持链式调用
      */
     public Excel2Html setPaperMode(Float paperWidth, Float paperHeight) {
         this.isPaperMode = true;
@@ -172,30 +214,54 @@ public class Excel2Html {
         return this;
     }
 
+    /**
+     * 设置嵌入文件映射
+     *
+     * @param embedFileMap 嵌入文件映射
+     * @return 当前实例，支持链式调用
+     */
     public Excel2Html setEmbedFileMap(Map<String, XSSFPictureData> embedFileMap) {
         this.embedFileMap = embedFileMap;
         return this;
     }
 
+    /**
+     * 设置单元格值格式化器
+     *
+     * @param cellValueFormater 单元格值格式化器
+     * @return 当前实例，支持链式调用
+     */
     public Excel2Html setCellValueFormater(ICellValueFormater cellValueFormater) {
         this.cellValueFormater = cellValueFormater;
         return this;
     }
 
+    /**
+     * 设置表格行元素处理器
+     *
+     * @param trElementHandler 表格行元素处理器
+     * @return 当前实例，支持链式调用
+     */
     public Excel2Html setTrElementHandler(ITrElementHandler trElementHandler) {
         this.trElementHandler = trElementHandler;
         return this;
     }
 
+    /**
+     * 设置单元格处理器
+     *
+     * @param cellHandler 单元格处理器
+     * @return 当前实例，支持链式调用
+     */
     public Excel2Html setCellHandler(ICellHandler cellHandler) {
         this.cellHandler = cellHandler;
         return this;
     }
 
     /**
-     * 加载嵌入文件
+     * 加载嵌入文件（如Excel中的图片）
      *
-     * @throws IOException
+     * @throws IOException 如果文件读取失败
      */
     private void doLoadEmbedFile() throws IOException {
         if (Objects.nonNull(fileData) && this.isLoadEmbedFile && this.embedFileMap == null) {
@@ -204,15 +270,15 @@ public class Excel2Html {
     }
 
     /**
-     * 构建 html
+     * 构建指定Sheet范围的HTML页面
      *
-     * @param sheet         sheet
-     * @param startRowIndex 开始行，可为空默认0
-     * @param endRowIndex   结束行，可为空默认最后
-     * @param startColIndex 开始列，可为空默认0
-     * @param endColIndex   结束列，可为空默认最后
-     * @return html 结果
-     * @throws IOException
+     * @param sheet         要转换的Sheet
+     * @param startRowIndex 开始行索引，可为null默认为0
+     * @param endRowIndex   结束行索引，可为null默认为最后一行
+     * @param startColIndex 开始列索引，可为null默认为0
+     * @param endColIndex   结束列索引，可为null默认为最后一列
+     * @return 构建的HTML页面对象
+     * @throws IOException 如果文件处理过程中出错
      */
     public HtmlPage buildHtml(Sheet sheet, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex) throws IOException {
         if (Objects.isNull(sheet)) return null;
