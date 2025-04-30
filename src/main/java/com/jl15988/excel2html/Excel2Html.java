@@ -84,6 +84,21 @@ public class Excel2Html {
     private boolean isLoadEmbedFile = true;
 
     /**
+     * 纸张宽度
+     */
+    private Float paperWidth = null;
+
+    /**
+     * 纸张高度
+     */
+    private Float paperHeight = null;
+
+    /**
+     * 是否按纸张大小转换
+     */
+    private boolean isPaperMode = false;
+
+    /**
      * 嵌入文件缓存
      */
     private Map<String, XSSFPictureData> embedFileMap;
@@ -138,6 +153,22 @@ public class Excel2Html {
 
     public Excel2Html setLoadEmbedFile(boolean loadEmbedFile) {
         this.isLoadEmbedFile = loadEmbedFile;
+        return this;
+    }
+
+    /**
+     * 设置是否按纸张大小转换
+     *
+     * <p>通过计算行、列占用截取行、列，可能不太准确</p>
+     *
+     * @param paperWidth  纸张宽度，单位毫米
+     * @param paperHeight 纸张高度，单位毫米
+     * @return this
+     */
+    public Excel2Html setPaperMode(Float paperWidth, Float paperHeight) {
+        this.isPaperMode = true;
+        this.paperWidth = paperWidth;
+        this.paperHeight = paperHeight;
         return this;
     }
 
@@ -331,7 +362,31 @@ public class Excel2Html {
         Map<String, Map<String, Object>> tagCellContainerStyleCompressCache = new HashMap<>();
         Map<String, Map<String, Object>> tagCellValStyleCompressCache = new HashMap<>();
 
-        // todo 按打印页转换
+        // 如果开启了打印页模式，则计算打印页范围
+        int printLastRowNum = -1;
+        int printLastColNum = -1;
+        if (this.isPaperMode) {
+            // 获取打印页的最后一行
+            printLastRowNum = Excel2HtmlUtil.getPrintLastRowNum(sheet, this.paperHeight);
+            System.out.println("[Excel2HTML 调试] 打印页最后一行：" + printLastRowNum);
+            // 获取打印页的最后一列
+            printLastColNum = Excel2HtmlUtil.getPrintLastColNum(sheet, this.paperWidth);
+            System.out.println("[Excel2HTML 调试] 打印页最后一列：" + printLastColNum);
+
+            // 如果计算出的打印页有效且比指定的结束行小，则使用打印页的最后一行作为结束行
+            if (printLastRowNum > 0 && printLastRowNum < endRowIndex) {
+                // 打印页模式下，自动调整结束行为打印页的最后一行
+                endRowIndex = printLastRowNum;
+            }
+
+            // 如果计算出的打印页有效且比指定的结束列小，则使用打印页的最后一列作为结束列
+            if (printLastColNum > 0 && printLastColNum < endColIndex) {
+                // 打印页模式下，自动调整结束列为打印页的最后一列
+                endColIndex = printLastColNum;
+            }
+        }
+        System.out.println("[Excel2HTML 调试] 最终结束行：" + endRowIndex);
+        System.out.println("[Excel2HTML 调试] 最终结束列：" + endColIndex);
 
         // 单元格解析
         float defaultRowHeightInPoints = sheet.getDefaultRowHeightInPoints();
