@@ -25,30 +25,176 @@
 </dependency>
 ```
 
-### 使用
+### 基本使用方法
+
+#### 简单方式（使用辅助类）
+
 ```java
- List<HtmlPage> htmlPages = new Excel2Html(new File(respVO.getTempPath()))
-        .setDpi(dpi)
-        .setCellHandler(new ICellHandler() {
-            @Override
-            public void handleStyle(ParserdStyleResult parserdStyleResult, Cell cell, int rowIndex, int cellIndex) {
-                // 去掉第一行单元格顶部边框
-                if (rowIndex == 4) {
-                    parserdStyleResult.cellStyle.remove("border-top");
-                }
-            }
-        })
-        .buildHtmlWithSheetIndex(4, null, 4, 46, 0, 29);
-List<String> wbContent = htmlPages.stream().map(htmlPage -> htmlPage.setHasHtmlContainer(false).toHtmlString()).collect(Collectors.toList());
+// 使用Excel2HtmlHelper快速将整个Sheet转换为HTML
+HtmlPage htmlPage = Excel2HtmlHelper.toHtml(sheet);
+
+// 转换为HTML字符串
+String htmlString = htmlPage.toHtmlString();
 ```
 
-### 所有方法
-- buildHtml(Sheet sheet, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex)
-- buildHtmlWithSheetIndex(int sheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex)
-- buildHtmlWithSheetIndex(Integer startSheetIndex, Integer endSheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex)
-- buildHtml(Sheet sheet)
-- buildHtmlWithSheetIndex(int sheetIndex)
-- buildHtmlWithSheetIndex(Integer startSheetIndex, Integer endSheetIndex)
+#### 带参数方式（使用辅助类）
+
+```java
+// 指定行列范围和是否压缩样式
+HtmlPage htmlPage = Excel2HtmlHelper.toHtml(sheet, 0, 20, 0, 10, true);
+
+// 指定行列范围、是否压缩样式，并提供自定义的单元格格式化器和嵌入文件映射
+HtmlPage htmlPage = Excel2HtmlHelper.toHtml(sheet, 0, 20, 0, 10, true, myCellValueFormatter, myEmbedFileMap);
+```
+
+#### 完整方式（使用核心类）
+
+```java
+// 创建Excel2Html实例（可从File、InputStream或byte[]创建）
+Excel2Html excel2Html = new Excel2Html(new File("path/to/excel.xlsx"))
+    // 设置屏幕DPI值（用于计算像素）
+    .setDpi(96)
+    // 设置是否压缩样式（将重复样式合并为CSS类）
+    .setCompressStyle(true)
+    // 设置是否加载嵌入文件（如图片）
+    .setLoadEmbedFile(true)
+    // 设置是否使用纸张模式（根据纸张大小限制行列）
+    .setPaperMode(210f, 297f) // A4纸张尺寸（毫米）
+    // 设置单元格值的格式化器
+    .setCellValueFormater(new ICellValueFormater() {
+        @Override
+        public ParserdCellValue format(Cell cell, int rowIndex, int cellIndex) {
+            // 自定义单元格值格式化逻辑
+            return null; // 返回null表示使用默认格式化
+        }
+    })
+    // 设置表格行元素处理器
+    .setTrElementHandler(new ITrElementHandler() {
+        @Override
+        public void handle(HtmlElement tr, int rowIndex) {
+            // 自定义处理表格行元素的逻辑
+            tr.addClass("my-custom-row");
+        }
+    })
+    // 设置单元格处理器
+    .setCellHandler(new ICellHandler() {
+        @Override
+        public void handleStyle(ParserdStyleResult parserdStyleResult, Cell cell, int rowIndex, int cellIndex) {
+            // 自定义处理单元格样式的逻辑
+            if (rowIndex == 0) {
+                // 为第一行添加特殊样式
+                parserdStyleResult.cellStyle.put("background-color", "#f5f5f5");
+            }
+        }
+    });
+
+// 构建指定Sheet的HTML（可以指定行列范围）
+HtmlPage htmlPage = excel2Html.buildHtml(sheet, 0, 20, 0, 10);
+
+// 或者通过Sheet索引构建HTML
+HtmlPage htmlPage = excel2Html.buildHtmlWithSheetIndex(0, 0, 20, 0, 10);
+
+// 构建多个Sheet的HTML
+List<HtmlPage> htmlPages = excel2Html.buildHtmlWithSheetIndex(0, 3, 0, 20, 0, 10);
+```
+
+#### 处理构建后的HTML
+
+```java
+// 获取HTML字符串（默认包含完整的HTML结构）
+String htmlString = htmlPage.toHtmlString();
+
+// 获取不包含HTML容器的字符串（仅包含表格内容）
+String htmlContentString = htmlPage.setHasHtmlContainer(false).toHtmlString();
+
+// 批量处理多个Sheet的HTML
+List<String> htmlStrings = htmlPages.stream()
+    .map(page -> page.setHasHtmlContainer(false).toHtmlString())
+    .collect(Collectors.toList());
+```
+
+### 主要功能和配置选项
+
+#### Excel2Html类的主要方法
+
+- **setDpi(int dpi)**: 设置屏幕DPI值，用于计算像素转换，默认为96
+- **setCompressStyle(boolean compressStyle)**: 设置是否启用样式压缩，默认为true
+- **setLoadEmbedFile(boolean loadEmbedFile)**: 设置是否加载嵌入文件（如图片），默认为true
+- **setPaperMode(Float paperWidth, Float paperHeight)**: 设置是否按纸张大小转换，指定纸张宽度和高度（单位：毫米）
+- **setCellValueFormater(ICellValueFormater formater)**: 设置单元格值格式化器
+- **setTrElementHandler(ITrElementHandler handler)**: 设置表格行元素处理器
+- **setCellHandler(ICellHandler handler)**: 设置单元格处理器
+
+#### 构建HTML的方法
+
+- **buildHtml(Sheet sheet)**: 构建整个Sheet的HTML
+- **buildHtml(Sheet sheet, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex)**: 构建指定行列范围的HTML
+- **buildHtmlWithSheetIndex(int sheetIndex)**: 根据Sheet索引构建整个Sheet的HTML
+- **buildHtmlWithSheetIndex(int sheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex)**: 根据Sheet索引构建指定行列范围的HTML
+- **buildHtmlWithSheetIndex(Integer startSheetIndex, Integer endSheetIndex)**: 构建多个Sheet的HTML
+- **buildHtmlWithSheetIndex(Integer startSheetIndex, Integer endSheetIndex, Integer startRowIndex, Integer endRowIndex, Integer startColIndex, Integer endColIndex)**: 构建多个Sheet的指定行列范围的HTML
+
+### 高级功能
+
+#### 自定义单元格值格式化
+
+通过实现`ICellValueFormater`接口可以自定义单元格值的格式化逻辑：
+
+```java
+excel2Html.setCellValueFormater(new ICellValueFormater() {
+    @Override
+    public ParserdCellValue format(Cell cell, int rowIndex, int cellIndex) {
+        // 对特定单元格应用自定义格式
+        if (rowIndex == 1 && cellIndex == 2) {
+            ParserdCellValue value = new ParserdCellValue();
+            value.text = "自定义内容";
+            value.type = ParserdCellValueType.STRING;
+            return value;
+        }
+        return null; // 返回null表示使用默认格式化
+    }
+});
+```
+
+#### 自定义单元格样式
+
+通过实现`ICellHandler`接口可以自定义单元格样式：
+
+```java
+excel2Html.setCellHandler(new ICellHandler() {
+    @Override
+    public void handleStyle(ParserdStyleResult parserdStyleResult, Cell cell, int rowIndex, int cellIndex) {
+        // 修改单元格样式
+        if (rowIndex % 2 == 0) {
+            // 偶数行背景色
+            parserdStyleResult.cellStyle.put("background-color", "#f9f9f9");
+        }
+        
+        // 去掉某些边框
+        if (rowIndex == 4) {
+            parserdStyleResult.cellStyle.remove("border-top");
+        }
+    }
+});
+```
+
+#### 自定义行元素处理
+
+通过实现`ITrElementHandler`接口可以自定义表格行元素：
+
+```java
+excel2Html.setTrElementHandler(new ITrElementHandler() {
+    @Override
+    public void handle(HtmlElement tr, int rowIndex) {
+        // 为表格行添加自定义类或属性
+        tr.addClass("row-" + rowIndex);
+        
+        if (rowIndex == 0) {
+            tr.addClass("header-row");
+        }
+    }
+});
+```
 
 ## 难点
 

@@ -20,7 +20,11 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * excel 转 html 工具
+ * Excel 转 HTML 工具类
+ * <p>
+ * 提供一系列工具方法，用于辅助Excel到HTML的转换过程。
+ * 包含Excel文件解析、单位换算、尺寸计算等功能。
+ * </p>
  *
  * @author Jalon
  * @since 2024/12/6 10:01
@@ -28,9 +32,15 @@ import java.util.Objects;
 public class Excel2HtmlUtil {
 
     /**
-     * 加载嵌入文件
+     * 从Excel文件数据中加载嵌入文件（如图片）
+     * <p>
+     * Excel文件实际上是一个ZIP格式的压缩包，此方法解析压缩包内容，
+     * 提取嵌入的图片等多媒体文件。
+     * </p>
      *
-     * @throws IOException
+     * @param fileData Excel文件的字节数据
+     * @return 嵌入文件映射，key为文件ID，value为图片数据
+     * @throws IOException 如果文件解析过程中出错
      */
     public static Map<String, XSSFPictureData> doLoadEmbedFile(byte[] fileData) throws IOException {
         if (Objects.nonNull(fileData)) {
@@ -42,18 +52,26 @@ public class Excel2HtmlUtil {
     }
 
     /**
-     * 获取最大行数
+     * 获取工作表中的最大行数
+     * <p>
+     * 返回工作表中最后一行的索引值+1，即实际行数
+     * </p>
      *
-     * @param sheet sheet
+     * @param sheet 工作表对象
+     * @return 工作表中的最大行数
      */
     public static int getMaxRowNum(Sheet sheet) {
         return sheet.getLastRowNum() + 1;
     }
 
     /**
-     * 获取最大列数
+     * 获取工作表中的最大列数
+     * <p>
+     * 通过遍历所有行，找出最大的列索引值
+     * </p>
      *
-     * @param sheet sheet
+     * @param sheet 工作表对象
+     * @return 工作表中的最大列数
      */
     public static int getMaxColNum(Sheet sheet) {
         short colNum = 0;
@@ -67,13 +85,16 @@ public class Excel2HtmlUtil {
     }
 
     /**
-     * 获取打印页的最后一行
+     * 获取打印页的最后一行索引
+     * <p>
+     * 根据纸张高度计算可显示的最大行数。通过计算行的累计高度，
+     * 确定在指定纸张高度下最多可显示到哪一行。
+     * 注意：通过计算行、列占用截取行、列，计算结果可能不太准确。
+     * </p>
      *
-     * <p>通过计算行、列占用截取行、列，可能不太准确</p>
-     *
-     * @param sheet       sheet
+     * @param sheet       工作表对象
      * @param paperHeight 纸张高度，单位毫米
-     * @return 打印页的最后一行
+     * @return 打印页的最后一行索引
      */
     public static int getPrintLastRowNum(Sheet sheet, Float paperHeight) {
         XSSFPrintSetup printSetup = (XSSFPrintSetup) sheet.getPrintSetup();
@@ -117,13 +138,16 @@ public class Excel2HtmlUtil {
     }
 
     /**
-     * 获取打印页的最后一列
+     * 获取打印页的最后一列索引
+     * <p>
+     * 根据纸张宽度计算可显示的最大列数。通过计算列的累计宽度，
+     * 确定在指定纸张宽度下最多可显示到哪一列。
+     * 注意：通过计算行、列占用截取行、列，计算结果可能不太准确。
+     * </p>
      *
-     * <p>通过计算行、列占用截取行、列，可能不太准确</p>
-     *
-     * @param sheet      sheet
+     * @param sheet      工作表对象
      * @param paperWidth 纸张宽度，单位毫米
-     * @return 打印页的最后一列
+     * @return 打印页的最后一列索引
      */
     public static int getPrintLastColNum(Sheet sheet, Float paperWidth) {
         XSSFPrintSetup printSetup = (XSSFPrintSetup) sheet.getPrintSetup();
@@ -169,9 +193,13 @@ public class Excel2HtmlUtil {
     }
 
     /**
-     * 获取工作簿默认字体像素大小
+     * 获取工作簿默认字体的像素大小
+     * <p>
+     * 根据工作簿默认字体的名称和高度计算对应的像素大小
+     * </p>
      *
-     * @param workbook 工作簿
+     * @param workbook 工作簿对象
+     * @return 默认字体的像素大小
      */
     public static double getDefaultFontPixelSize(Workbook workbook) {
         Font defaultWorkbookFont = Excel2HtmlUtil.getDefaultWorkbookFont(workbook);
@@ -179,9 +207,13 @@ public class Excel2HtmlUtil {
     }
 
     /**
-     * 获取默认像素列宽
+     * 获取默认列宽（像素值）
+     * <p>
+     * 计算工作簿默认列宽的像素值，考虑了字体大小、内边距和网格线宽度
+     * </p>
      *
-     * @param workbook 工作簿
+     * @param workbook 工作簿对象
+     * @return 默认列宽的像素值
      */
     public static int getDefaultColumnWidthInPixels(Workbook workbook) {
         double defaultColumnCharWidth = 8;
@@ -198,8 +230,12 @@ public class Excel2HtmlUtil {
 
     /**
      * 获取默认字符列宽
+     * <p>
+     * 计算工作簿默认列宽的字符数
+     * </p>
      *
-     * @param workbook 工作簿
+     * @param workbook 工作簿对象
+     * @return 默认列宽的字符数
      */
     public static int getDefaultColumnWidth(Workbook workbook) {
         double defaultFontPixelSize = Excel2HtmlUtil.getDefaultFontPixelSize(workbook);
@@ -207,9 +243,13 @@ public class Excel2HtmlUtil {
     }
 
     /**
-     * 获取默认字符列宽，获取的为负数，且扩大 10000 倍的，用于标识和保留小数
+     * 获取特殊格式的默认字符列宽
+     * <p>
+     * 返回负数，且扩大10000倍的值，用于标识特殊列宽并保留小数精度
+     * </p>
      *
-     * @param workbook 工作簿
+     * @param workbook 工作簿对象
+     * @return 特殊格式的默认字符列宽
      */
     public static int getDefaultColumnWidthSpecial(Workbook workbook) {
         double defaultFontPixelSize = Excel2HtmlUtil.getDefaultFontPixelSize(workbook);
@@ -217,10 +257,14 @@ public class Excel2HtmlUtil {
     }
 
     /**
-     * 获取像素列宽
+     * 获取指定列的像素宽度
+     * <p>
+     * 根据工作表中列宽的设置，计算对应的像素宽度
+     * </p>
      *
-     * @param sheet       sheet
-     * @param columnIndex 列
+     * @param sheet       工作表对象
+     * @param columnIndex 列索引
+     * @return 列的像素宽度
      */
     public static int getColumnWidthInPixels(Sheet sheet, int columnIndex) {
         double defaultFontPixelSize = Excel2HtmlUtil.getDefaultFontPixelSize(sheet.getWorkbook());
@@ -233,8 +277,13 @@ public class Excel2HtmlUtil {
 
     /**
      * 获取工作簿默认的字体
+     * <p>
+     * 如果工作簿中已定义字体，则返回第一个字体；
+     * 否则创建一个新的默认字体
+     * </p>
      *
-     * @param workbook 工作簿
+     * @param workbook 工作簿对象
+     * @return 工作簿默认字体
      */
     public static Font getDefaultWorkbookFont(Workbook workbook) {
         int numberOfFonts = workbook.getNumberOfFonts();
