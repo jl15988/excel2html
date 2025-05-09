@@ -1,12 +1,18 @@
 package com.jl15988.excel2html.parser;
 
+import com.jl15988.excel2html.Excel2HtmlUtil;
 import com.jl15988.excel2html.enums.CommonElementClass;
 import com.jl15988.excel2html.enums.ParserdCellValueType;
 import com.jl15988.excel2html.html.HtmlElement;
 import com.jl15988.excel2html.html.HtmlElementList;
 import com.jl15988.excel2html.model.parser.ParserdCellValue;
 import com.jl15988.excel2html.model.style.FontICssStyle;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
@@ -30,6 +36,7 @@ public class CellValueParser {
      * 判断单元格内是否为富文本
      *
      * @param cell 单元格
+     * @return 是否为富文本
      */
     public static boolean isRichValue(Cell cell) {
         CellType cellType = cell.getCellType();
@@ -48,6 +55,7 @@ public class CellValueParser {
      * 解析富文本单元格
      *
      * @param cell 单元格
+     * @return 解析后的html列表
      */
     public static HtmlElementList parserCellRichValue(Cell cell) {
         if (!isRichValue(cell)) {
@@ -117,22 +125,41 @@ public class CellValueParser {
         return htmlElementList;
     }
 
+    /**
+     * 解析单元格数字内容
+     *
+     * @param cell     单元格
+     * @param cellType 单元格类型
+     * @return 数字内容
+     */
     public static String parserCellNumericValue(Cell cell, CellType cellType) {
         if (cellType != CellType.NUMERIC) {
             return null;
         }
-        if (DateUtil.isCellDateFormatted(cell)) {
-            return cell.getDateCellValue().toString();
-        } else {
-            return CellValueFormatter.formatNumericValue(cell, cell.getNumericCellValue());
+
+        // 判断是否为日期类型
+        if (Excel2HtmlUtil.isCellDateFormatted(cell)) {
+            // 使用增强版的格式获取方法
+            String enhancedDataFormat = Excel2HtmlUtil.getDataFormatString(cell);
+            // 如果是日期类型，并且我们有增强的格式
+            if (enhancedDataFormat != null && !enhancedDataFormat.isEmpty()) {
+                return CellValueFormatter.formatDateValue(cell, enhancedDataFormat);
+            } else {
+                // 没有增强格式或格式无效，使用DataFormatter
+                DataFormatter dataFormatter = new DataFormatter();
+                dataFormatter.setUseCachedValuesForFormulaCells(true);
+                return dataFormatter.formatCellValue(cell);
+            }
         }
+
+        return CellValueFormatter.formatNumericValue(cell, cell.getNumericCellValue());
     }
 
     /**
-     * 解析公式结果
+     * 解析公式内容
      *
      * @param cell 单元格
-     * @return 结果
+     * @return 公式结果
      */
     public static String parserCellFormulaValue(Cell cell) {
         // 获取缓存公式结果类型
@@ -144,6 +171,7 @@ public class CellValueParser {
      * 执行单元格公式，某个函数可能不支持
      *
      * @param cell 单元格
+     * @return 执行公式后的结果
      */
     public static String exeCellFormula(Cell cell) {
         String resultValue = "";
@@ -181,6 +209,7 @@ public class CellValueParser {
      *
      * @param cell     单元格
      * @param cellType 单元格类型
+     * @return 解析后的内容
      */
     public static String parseCellBaseValue(Cell cell, CellType cellType) {
         String resultValue = "";
@@ -209,6 +238,13 @@ public class CellValueParser {
         return resultValue;
     }
 
+    /**
+     * 解析单元格嵌入附件
+     *
+     * @param cell         单元格
+     * @param embedFileMap 嵌入附件映射
+     * @return 解析后的单元格内容
+     */
     public static String parserCellEmbedFile(Cell cell, Map<String, XSSFPictureData> embedFileMap) {
         if (Objects.isNull(embedFileMap)) return null;
         String regex = "_xlfn.DISPIMG\\(\"([^)]+)\",\\d+\\)";
@@ -239,6 +275,7 @@ public class CellValueParser {
      * 解析单元格内容
      *
      * @param cell 单元格
+     * @return 解析后的单元格内容
      */
     public static ParserdCellValue parseCellValue(Cell cell, Map<String, XSSFPictureData> embedFileMap) {
         ParserdCellValue.ParserdCellValueBuilder parserdCellValueBuilder = ParserdCellValue.builder().type(ParserdCellValueType.TEXT);
@@ -274,17 +311,27 @@ public class CellValueParser {
                     return parserdCellValueBuilder.type(ParserdCellValueType.HTML_IMG).value(embedValue).build();
             }
         }
-        // 官方提供的内容解析
-        DataFormatter dataFormatter = new DataFormatter();
-        dataFormatter.setUseCachedValuesForFormulaCells(true);
-        return parserdCellValueBuilder
-                .value(dataFormatter.formatCellValue(cell))
-                .build();
-        // 下面是自定义的内容解析
+
+        String value = "";
+
+        // 判断是否为日期类型
+        if (cellType == CellType.NUMERIC && Excel2HtmlUtil.isCellDateFormatted(cell)) {
+            value = CellValueParser.parserCellNumericValue(cell, cellType);
+        } else {
+            // 非日期类型，使用DataFormatter
+            DataFormatter dataFormatter = new DataFormatter();
+            dataFormatter.setUseCachedValuesForFormulaCells(true);
+            value = dataFormatter.formatCellValue(cell);
+        }
+
+        // 自定义的解析器
 //        if (CellType.FORMULA.equals(cell.getCellType())) {
-//            return parserCellFormulaValue(cell);
+//            value = parserCellFormulaValue(cell);
 //        } else {
-//            return parseCellBaseValue(cell, cell.getCellType());
+//            value = parseCellBaseValue(cell, cell.getCellType());
 //        }
+        return parserdCellValueBuilder
+                .value(value)
+                .build();
     }
 }

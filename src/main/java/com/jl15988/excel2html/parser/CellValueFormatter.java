@@ -1,6 +1,8 @@
 package com.jl15988.excel2html.parser;
 
+import com.jl15988.excel2html.Excel2HtmlUtil;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 
 import java.math.BigDecimal;
 
@@ -31,5 +33,27 @@ class CellValueFormatter {
             }
         }
         return String.valueOf(number);
+    }
+
+    /**
+     * 格式化日期内容，注意必须是数字日期格式才可使用
+     *
+     * @param cell       单元格
+     * @param dateFormat 日期格式
+     * @return 格式化后的内容
+     */
+    public static String formatDateValue(Cell cell, String dateFormat) {
+        try {
+            // 将Excel日期格式转换为Java SimpleDateFormat格式
+            String javaDateFormat = Excel2HtmlUtil.convertExcelDateFormatToJava(dateFormat);
+            // 使用SimpleDateFormat格式化日期
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(javaDateFormat);
+            return sdf.format(cell.getDateCellValue());
+        } catch (Exception e) {
+            // 如果格式化失败，回退到DataFormatter
+            DataFormatter dataFormatter = new DataFormatter();
+            dataFormatter.setUseCachedValuesForFormulaCells(true);
+            return dataFormatter.formatCellValue(cell);
+        }
     }
 }
