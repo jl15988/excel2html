@@ -328,64 +328,75 @@ public class Excel2HtmlUtil {
         additionalFormats.put((short) 2, "0.00");                      // 2: 两位小数
         additionalFormats.put((short) 3, "#,##0");                     // 3: 千分位整数
         additionalFormats.put((short) 4, "#,##0.00");                  // 4: 千分位两位小数
-        additionalFormats.put((short) 5, "$#,##0_);($#,##0)");         // 5: 会计格式（美元符号）
-        additionalFormats.put((short) 6, "$#,##0_);[Red]($#,##0)");    // 6: 会计格式（美元符号，负数红色）
-        additionalFormats.put((short) 7, "$#,##0.00_);($#,##0.00)");   // 7: 会计格式（美元符号，两位小数）
-        additionalFormats.put((short) 8, "$#,##0.00_);[Red]($#,##0.00)"); // 8: 会计格式（美元符号，两位小数，负数红色）
+        additionalFormats.put((short) 5, "￥#,##0;￥-#,##0");         // 5: 会计格式
+        additionalFormats.put((short) 6, "￥#,##0;[红色]￥-#,##0");    // 6: 会计格式（负数红色）
+        additionalFormats.put((short) 7, "￥#,##0.00;￥-#,##0.00");   // 7: 会计格式（两位小数）
+        additionalFormats.put((short) 8, "￥#,##0.00;[红色]￥-#,##0.00"); // 8: 会计格式（两位小数，负数红色）
         additionalFormats.put((short) 9, "0%");                        // 9: 百分比，整数
         additionalFormats.put((short) 10, "0.00%");                    // 10: 百分比，两位小数
         additionalFormats.put((short) 11, "0.00E+00");                 // 11: 科学计数法
-        additionalFormats.put((short) 12, "# ?/?");                    // 12: 分数
-        additionalFormats.put((short) 13, "# ??/??");                  // 13: 分数
-
-        // 日期格式
-        additionalFormats.put((short) 14, "m/d/yy");                   // 14: 短日期 mm-dd-yy
+//
+//        // 日期格式
+        additionalFormats.put((short) 14, "yyyy/m/d");                   // 14: 短日期 yyyy/m/d
         additionalFormats.put((short) 15, "d-mmm-yy");                 // 15: 长日期 dd-mmm-yy
         additionalFormats.put((short) 16, "d-mmm");                    // 16: dd-mmm
         additionalFormats.put((short) 17, "mmm-yy");                   // 17: mmm-yy
-        additionalFormats.put((short) 18, "h:mm AM/PM");               // 18: 时间 h:mm AM/PM
-        additionalFormats.put((short) 19, "h:mm:ss AM/PM");            // 19: 时间 h:mm:ss AM/PM
         additionalFormats.put((short) 20, "h:mm");                     // 20: 时间 h:mm
         additionalFormats.put((short) 21, "h:mm:ss");                  // 21: 时间 h:mm:ss
-        additionalFormats.put((short) 22, "m/d/yy h:mm");              // 22: 日期时间 m/d/yy h:mm
+        additionalFormats.put((short) 22, "yyyy/m/d h:mm");              // 22: 日期时间 yyyy/m/d h:mm
 
-        // Office Excel中文版常用日期格式
-        additionalFormats.put((short) 27, "[$-404]e/m/d");             // 27: 农历日期格式
-        additionalFormats.put((short) 28, "[$-404]e\"年\"m\"月\"d\"日\""); // 28: 中文农历日期
-        additionalFormats.put((short) 29, "[$-404]e\"年\"m\"月\"");     // 29: 中文农历年月
-        additionalFormats.put((short) 30, "m-d-yy");                   // 30: 日期格式 m-d-yy
+        additionalFormats.put((short) 23, "$#,##0_);($#,##0)");
+        additionalFormats.put((short) 24, "$#,##0_);[红色]($#,##0)");
+        additionalFormats.put((short) 25, "$#,##0.00_);($#,##0.00)");
+        additionalFormats.put((short) 26, "$#,##0.00_);[红色]($#,##0.00)");
+
+        additionalFormats.put((short) 30, "m/d/yy");                   // 30: 日期格式 m/d/yy
         additionalFormats.put((short) 31, "yyyy\"年\"m\"月\"d\"日\"");   // 31: 中文日期年月日
         additionalFormats.put((short) 32, "h\"时\"mm\"分\"");           // 32: 中文时间时分
         additionalFormats.put((short) 33, "h\"时\"mm\"分\"ss\"秒\"");    // 33: 中文时间时分秒
-        additionalFormats.put((short) 34, "上午/下午h\"时\"mm\"分\"");    // 34: 中文带上下午时间
-        additionalFormats.put((short) 35, "上午/下午h\"时\"mm\"分\"ss\"秒\""); // 35: 中文带上下午时间秒
-        additionalFormats.put((short) 36, "yyyy\"年\"m\"月\"");         // 36: 中文年月
-        additionalFormats.put((short) 37, "m\"月\"d\"日\"");           // 37: 中文月日
-        additionalFormats.put((short) 38, "yyyy-mm-dd");              // 38: ISO标准日期
-        additionalFormats.put((short) 39, "yyyy\"年\"m\"月\"d\"日\" h\"时\"mm\"分\"ss\"秒\""); // 39: 中文完整日期时间
-        additionalFormats.put((short) 40, "yyyy/m/d h:mm");           // 40: 日期时间 yyyy/m/d h:mm
-        additionalFormats.put((short) 41, "yyyy/m/d h:mm:ss");        // 41: 日期时间带秒
-        additionalFormats.put((short) 42, "yyyy-mm-dd hh:mm:ss");     // 42: ISO标准日期时间
 
-        // 货币格式
-        additionalFormats.put((short) 43, "\"￥\"#,##0;\"￥\"\\-#,##0");  // 43: 人民币整数
-        additionalFormats.put((short) 44, "\"￥\"#,##0;[Red]\"￥\"\\-#,##0"); // 44: 人民币整数(负数红色)
-        additionalFormats.put((short) 45, "\"￥\"#,##0.00;\"￥\"\\-#,##0.00"); // 45: 人民币两位小数
-        additionalFormats.put((short) 46, "\"￥\"#,##0.00;[Red]\"￥\"\\-#,##0.00"); // 46: 人民币两位小数(负数红色)
-        additionalFormats.put((short) 47, "\"$\"#,##0.00_);\"$\"#,##0.00\\)"); // 47: 美元两位小数(负括号)
-        additionalFormats.put((short) 48, "\"$\"#,##0.00_);[Red]\"$\"#,##0.00\\)"); // 48: 美元两位小数(负红色括号)
+        additionalFormats.put((short) 37, "#,##0;-#,##0");
+        additionalFormats.put((short) 38, "#,##0;[红色]-#,##0");
+        additionalFormats.put((short) 39, "#,##0.00;-#,##0.00");
+        additionalFormats.put((short) 40, "#,##0.00;[红色]-#,##0.00");
+        additionalFormats.put((short) 41, "_ * #,##0_ ;_ * -#,##0_ ;_ * \"-\"_ ;_ @_ ");
+        additionalFormats.put((short) 42, "_ ￥* #,##0_ ;_ ￥* -#,##0_ ;_ ￥* \"-\"_ ;_ @_ ");
+        additionalFormats.put((short) 43, "_ * #,##0.00_ ;_ * -#,##0.00_ ;_ * \"-\"??_ ;_ @_ ");
+        additionalFormats.put((short) 44, "_ ￥* #,##0.00_ ;_ ￥* -#,##0.00_ ;_ ￥* \"-\"??_ ;_ @_ ");
+        additionalFormats.put((short) 45, "mm:ss");
+        additionalFormats.put((short) 46, "[h]:mm:ss");
+        additionalFormats.put((short) 47, "mm:ss.0");
+        additionalFormats.put((short) 48, "##0.0E+0");
+        additionalFormats.put((short) 49, "@");
 
-        // 会计专用
-        additionalFormats.put((short) 49, "_ * #,##0_ ;_ * \\-#,##0_ ;_ * \"-\"_ ;_ @_ "); // 49: 会计整数
-        additionalFormats.put((short) 50, "_ \"￥\"* #,##0_ ;_ \"￥\"* \\-#,##0_ ;_ \"￥\"* \"-\"_ ;_ @_ "); // 50: 会计人民币整数
-        additionalFormats.put((short) 51, "_ * #,##0.00_ ;_ * \\-#,##0.00_ ;_ * \"-\"??_ ;_ @_ "); // 51: 会计两位小数
-        additionalFormats.put((short) 52, "_ \"￥\"* #,##0.00_ ;_ \"￥\"* \\-#,##0.00_ ;_ \"￥\"* \"-\"??_ ;_ @_ "); // 52: 会计人民币两位小数
+        additionalFormats.put((short) 55, "上午/下午h\"时\"mm\"分\"");
+        additionalFormats.put((short) 56, "上午/下午h\"时\"mm\"分\"ss\"秒\"");
+        additionalFormats.put((short) 57, "yyyy\"年\"m\"月\"");
+        additionalFormats.put((short) 58, "m\"月\"d\"日\"");
 
-        // 自定义格式
-        additionalFormats.put((short) 57, "yyyy/mm/dd;@");            // 57: 日期(无格式文本)
-        additionalFormats.put((short) 58, "yyyy/m/d;@");              // 58: 日期简化(无格式文本)
-        additionalFormats.put((short) 59, "dd/mm/yyyy;@");            // 59: 日期欧洲格式(无格式文本)
-        additionalFormats.put((short) 67, "yyyy\"年\"m\"月\"d\"日\";@");// 67: 中文日期(无格式文本)
+        additionalFormats.put((short) 176, "# ?/?");
+        additionalFormats.put((short) 177, "# ??/??");
+        additionalFormats.put((short) 178, "[DBNum1][$-804]yyyy\"年\"m\"月\"d\"日\"");
+        additionalFormats.put((short) 179, "[DBNum1][$-804]yyyy\"年\"m\"月\"");
+        additionalFormats.put((short) 180, "[DBNum1][$-804]m\"月\"d\"日\"");
+        additionalFormats.put((short) 181, "[$-804]aaaa");
+        additionalFormats.put((short) 182, "[$-804]aaa");
+        additionalFormats.put((short) 183, "yyyy/m/d h:mm AM/PM");
+        additionalFormats.put((short) 184, "yy/m/d");
+        additionalFormats.put((short) 185, "m/d");
+        additionalFormats.put((short) 186, "mm/dd/yy");
+        additionalFormats.put((short) 187, "dd-mmm-yy");
+        additionalFormats.put((short) 188, "mmmm-yy");
+        additionalFormats.put((short) 189, "mmmmm");
+        additionalFormats.put((short) 190, "mmmmm-yy");
+        additionalFormats.put((short) 191, "h:mm AM/PM");
+        additionalFormats.put((short) 192, "h:mm:ss AM/PM");
+        additionalFormats.put((short) 193, "[DBNum1]h\"时\"mm\"分\"");
+        additionalFormats.put((short) 194, "[DBNum1]上午/下午h\"时\"mm\"分\"");
+        additionalFormats.put((short) 195, "¥#,##0;¥-#,##0");
+        additionalFormats.put((short) 196, "¥#,##0;[红色]¥-#,##0");
+        additionalFormats.put((short) 197, "¥#,##0.00;¥-#,##0.00");
+        additionalFormats.put((short) 198, "¥#,##0.00;[红色]¥-#,##0.00");
 
         // 从自定义的格式映射中获取
         String enhancedFormat = additionalFormats.get(dataFormat);
