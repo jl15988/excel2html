@@ -1,10 +1,17 @@
 package com.jl15988.excel2html.parser;
 
 import com.jl15988.excel2html.Excel2HtmlUtil;
+import com.jl15988.excel2html.evaluators.CustomConditionalFormattingEvaluator;
+import org.apache.poi.ss.formula.ConditionalFormattingEvaluator;
+import org.apache.poi.ss.formula.EvaluationConditionalFormatRule;
+import org.apache.poi.ss.formula.WorkbookEvaluatorProvider;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 单元格格式化器
@@ -43,17 +50,24 @@ class CellValueFormatter {
      * @return 格式化后的内容
      */
     public static String formatDateValue(Cell cell, String dateFormat) {
+//        try {
+//            // 将Excel日期格式转换为Java SimpleDateFormat格式
+//            String javaDateFormat = Excel2HtmlUtil.convertExcelDateFormatToJava(dateFormat);
+//            // 使用SimpleDateFormat格式化日期
+//            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(javaDateFormat);
+//            return sdf.format(cell.getDateCellValue());
+//        } catch (Exception e) {
+//            // 如果格式化失败，回退到DataFormatter
+//            DataFormatter dataFormatter = new DataFormatter();
+//            dataFormatter.setUseCachedValuesForFormulaCells(true);
+//            return dataFormatter.formatCellValue(cell, null, new CustomConditionalFormattingEvaluator(null, null));
+//        }
         try {
-            // 将Excel日期格式转换为Java SimpleDateFormat格式
-            String javaDateFormat = Excel2HtmlUtil.convertExcelDateFormatToJava(dateFormat);
-            // 使用SimpleDateFormat格式化日期
-            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat(javaDateFormat);
-            return sdf.format(cell.getDateCellValue());
-        } catch (Exception e) {
-            // 如果格式化失败，回退到DataFormatter
             DataFormatter dataFormatter = new DataFormatter();
             dataFormatter.setUseCachedValuesForFormulaCells(true);
-            return dataFormatter.formatCellValue(cell);
+            return dataFormatter.formatCellValue(cell, null, new CustomConditionalFormattingEvaluator(cell.getRow().getSheet().getWorkbook(), null));
+        } catch (Exception e) {
+            return "";
         }
     }
 }

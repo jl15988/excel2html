@@ -477,6 +477,7 @@ public class Excel2Html {
 
             for (int cellIndex = startCol; cellIndex <= endColIndex; cellIndex++) {
                 Cell cell = row.getCell(cellIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+                System.out.println(cell.getCellStyle().getDataFormat());
                 ParserdCellValue parserdCellValue = CellValueParser.parseCellValue(cell, this.embedFileMap);
                 String cellValue = parserdCellValue.getValue();
 
